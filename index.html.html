@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprout Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --green:#2e7d52;--green-light:#3d9966;--green-pale:#e8f5ee;--green-mid:#c3e6d3;--green-dark:#1a5c38;
+  --bg:#e8efe9;--card:#fff;--text:#1a2e22;--text-mid:#4a6657;--text-light:#8aab98;
+  --border:#d4e8dc;--off-white:#f4f8f5;--red:#c0392b;--num-bg:#f0f7f3;--op-bg:#e2f2ea;--fn-bg:#ddf0e7;
+  --key-h:48px;--r:12px;--rsm:8px;--rxs:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;}
+.app-shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 20px 40px;}
+.device{width:1040px;background:var(--card);border-radius:24px;box-shadow:0 4px 0 #b8d4c4,0 12px 48px rgba(46,125,82,.13),0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border);overflow:hidden;transition:width .3s ease;}
+.device.sidebar-collapsed{width:542px;}
+.device.sidebar-collapsed .history-panel{display:none;}
+.device.sidebar-collapsed .calc-layout{grid-template-columns:490px;gap:0;}
+
+/* HEADER */
+.device-header{background:linear-gradient(180deg,#f0f8f3,#e8f4ed);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo-lockup{display:flex;align-items:center;gap:12px;}
+.logo-circle{width:52px;height:52px;background:#fff;border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(46,125,82,.18);flex-shrink:0;}
+.logo-circle svg{width:36px;height:36px;}
+.brand-name{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
+.brand-sub{font-size:11px;color:var(--text-light);}
+.header-badge{background:var(--green-pale);border:1px solid var(--green-mid);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;color:var(--green);}
+
+/* LAYOUT */
+.device-content{padding:20px 24px 24px;}
+.module{display:none;}.module.active{display:block;}
+.calc-layout{display:grid;grid-template-columns:490px 1fr;gap:18px;align-items:start;transition:grid-template-columns .3s ease;}
+
+
+/* SCREEN */
+.screen-wrap{background:var(--off-white);border:1.5px solid var(--border);border-radius:var(--rsm);padding:12px 16px 16px;margin-bottom:10px;box-shadow:inset 0 2px 5px rgba(46,125,82,.05);}
+.screen-module-row{display:flex;align-items:center;gap:5px;margin-bottom:7px;}
+.screen-top-row{display:flex;align-items:center;gap:5px;margin-bottom:8px;}
+.mode-btn,.screen-mod-btn{background:none;border:1.5px solid var(--border);color:var(--text-light);font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;padding:2px 8px;cursor:pointer;letter-spacing:.5px;transition:all .13s;border-radius:20px;height:auto;flex:0;white-space:nowrap;box-shadow:none;display:inline-flex;align-items:center;gap:3px;}
+.mode-btn.active,.screen-mod-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.mode-btn:hover:not(.active),.screen-mod-btn:hover:not(.active){border-color:var(--green);color:var(--green);transform:none;box-shadow:none;}
+.screen-mod-btn svg{width:10px;height:10px;flex-shrink:0;}
+#shiftInd{font-size:9px;font-weight:700;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin-left:auto;transition:color .15s;}
+.calc-app.shift-on #shiftInd{color:var(--green-dark);font-weight:900;}
+.disp-expr{font-size:12px;color:var(--text-light);text-align:left;min-height:16px;font-family:'DM Mono',monospace;word-break:break-all;}
+.disp-render{min-height:130px;display:flex;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:2px;margin-top:8px;overflow:hidden;width:100%;}
+
+/* f(x)/g(x) MENU */
+.fn-menu-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(26,46,34,.18);align-items:center;justify-content:center;}
+.fn-menu-overlay.open{display:flex;}
+.fn-menu-card{background:#fff;border-radius:16px;border:1.5px solid var(--border);box-shadow:0 8px 40px rgba(46,125,82,.18);padding:0;min-width:520px;max-width:95vw;overflow:hidden;}
+.fn-menu-header{background:var(--green-pale);border-bottom:1.5px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.fn-menu-title{font-size:15px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif;}
+.fn-menu-close{background:none;border:none;font-size:20px;color:var(--text-light);cursor:pointer;padding:0;line-height:1;box-shadow:none;width:auto;height:auto;}
+.fn-menu-body{padding:16px;}
+.fn-menu-section{margin-bottom:14px;}
+.fn-menu-section-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-light);margin-bottom:8px;font-family:'DM Sans',sans-serif;}
+.fn-menu-row{display:flex;gap:8px;}
+.fn-menu-btn{flex:1;padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;background:var(--num-bg);
+  font-size:13px;font-weight:600;color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;
+  text-align:center;transition:all .12s;box-shadow:none;height:auto;}
+.fn-menu-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-pale);}
+.fn-menu-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.fn-input-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.fn-input-label{font-size:13px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;min-width:40px;}
+.fn-input{flex:1;height:36px;border:1.5px solid var(--border);border-radius:8px;
+  padding:0 10px;font-size:14px;font-family:'DM Mono',monospace;color:var(--text);
+  background:var(--num-bg);outline:none;}
+.fn-input:focus{border-color:var(--green);}
+.fn-pad{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;}
+.fn-pad-row{display:flex;gap:4px;flex-wrap:wrap;}
+.fn-pad-btn{height:34px;min-width:34px;padding:0 8px;border-radius:7px;border:1.5px solid var(--border);
+  font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:none;transition:all .1s;}
+.fn-pad-pron{background:#e8f5ee;color:var(--green-dark);border-color:var(--green-mid);font-size:15px;}
+.fn-pad-pron em{font-family:'Georgia',serif;font-style:italic;font-size:17px;font-weight:700;color:#1a5c35;}
+.fn-pad-pron:hover{background:var(--green);color:#fff;border-color:var(--green);}
+.fn-pad-num{background:var(--num-bg);color:var(--text);}
+.fn-pad-num:hover{border-color:var(--green);color:var(--green);}
+.fn-pad-fn{background:var(--fn-bg);color:var(--text);}
+.fn-pad-fn em{font-family:'Georgia',serif;font-style:italic;font-weight:700;color:#1a5c35;}
+.fn-pad-fn:hover{border-color:var(--green);color:var(--green);}
+.fn-pad-op{background:var(--op-bg);color:var(--text);font-size:16px;}
+.fn-pad-op:hover{border-color:var(--green);color:var(--green);}
+.fn-pad-del{background:#fde8e8;color:#c0392b;border-color:#f5c6c6;}
+.fn-pad-del:hover{background:#c0392b;color:#fff;}
+.fn-menu-action{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:10px;
+  font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;box-shadow:none;height:auto;}
+/* FORMAT */
+.round-wrap{position:relative;display:inline-block;}
+.round-popover{
+  display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#fff;border:1.5px solid var(--border);border-radius:10px;
+  padding:6px 8px;box-shadow:0 4px 16px rgba(46,125,82,.15);z-index:100;
+  white-space:nowrap;
+}
+.round-popover.open{display:block;}
+.round-popover-label{font-size:9px;font-weight:700;color:var(--text-light);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;text-align:center;
+  font-family:'DM Sans',sans-serif;}
+.round-input-row{display:flex;gap:6px;align-items:center;}
+.round-dp-input{
+  width:52px;height:28px;border:1.5px solid var(--border);border-radius:6px;
+  background:var(--num-bg);font-size:14px;font-weight:600;
+  font-family:'DM Mono',monospace;color:var(--text);
+  text-align:center;outline:none;padding:0 4px;
+}
+.round-dp-input:focus{border-color:var(--green);}
+.round-go-btn{
+  height:28px;padding:0 10px;border:1.5px solid var(--green);border-radius:6px;
+  background:var(--green);color:#fff;font-size:12px;font-weight:700;
+  font-family:'DM Sans',sans-serif;cursor:pointer;
+}
+.format-bar{display:flex;gap:5px;margin-bottom:9px;align-items:center;}
+.format-label{font-size:9px;font-weight:700;color:var(--text-light);margin-right:2px;letter-spacing:.5px;text-transform:uppercase;}
+.fmt-btn{background:var(--num-bg);border:1.5px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:600;color:var(--text-mid);cursor:pointer;transition:all .12s;font-family:'DM Sans',sans-serif;height:auto;flex:0;box-shadow:none;}
+.fmt-btn:hover{border-color:var(--green);color:var(--green);}
+.fmt-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+
+/* ── DISPLAY TOKENS ── */
+.token{display:inline-flex;align-items:center;font-family:'DM Mono',monospace;font-size:52px;font-weight:500;color:var(--text);position:relative;line-height:1;}
+.token.op{color:#1a2e22;font-size:40px;}
+.token.fn{color:#1a2e22;font-size:20px;font-family:'DM Sans',sans-serif;font-weight:600;}
+.token.cursor-after::after{content:'';position:absolute;right:-2px;top:8%;bottom:8%;width:2px;background:var(--green);border-radius:2px;animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* fraction */
+.token.frac{flex-direction:column;align-items:center;font-size:22px;padding:0 5px;gap:0;}
+.frac-slot{display:inline-flex;align-items:center;justify-content:center;min-width:32px;min-height:28px;padding:0 5px;border:1.5px solid var(--border);border-radius:3px;font-family:'DM Mono',monospace;font-size:22px;color:var(--text);cursor:pointer;transition:border-color .15s;background:#fff;}
+.frac-slot.active{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+.frac-slot.empty::after{content:'□';color:var(--text-light);font-size:16px;}
+.frac-bar{width:100%;min-width:36px;height:2.5px;background:#1a2e22;border-radius:2px;margin:4px 0;}
+
+/* RADICAL TOKEN — wrapper is position:relative, content determines height.
+   SVG is position:absolute left:0 top:0 bottom:0, draws the √ foot+diagonal.
+   Vinculum = border-top on .rad-content. Content has padding-left to clear the SVG. */
+.token.sqrt-tok{display:inline-flex;align-items:stretch;gap:0;}
+.token.nthroot-tok{display:inline-flex;align-items:flex-end;gap:0;}
+.rad-content{
+  display:inline-flex;align-items:center;
+  border-top:3px solid #1a2e22;
+  padding:4px 10px 8px 6px;
+  margin-left:34px; /* meeting point */
+  min-width:0.6em;font-size:44px;cursor:pointer;
+  box-sizing:border-box;
+}
+.rad-content.active-slot{border-top-color:var(--green);}
+.nthroot-deg{
+  display:inline-flex;align-items:center;
+  font-size:20px;min-width:14px;min-height:20px;
+  border:1.5px solid var(--border);border-radius:3px;
+  padding:0 3px;background:#fff;cursor:pointer;
+  align-self:flex-start;font-family:'DM Mono',monospace;
+  position:relative;z-index:1;
+}
+.nthroot-deg.active-slot{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+
+/* power — exp at top-left, base below */
+.token.pow-tok{display:inline-flex;align-items:flex-end;gap:1px;}
+.pow-base{display:inline-flex;align-items:center;min-width:30px;min-height:52px;border:1.5px solid var(--border);border-radius:3px;padding:0 5px;font-size:46px;background:#fff;cursor:pointer;}
+.pow-base.active-slot{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+.pow-exp{display:inline-flex;align-items:center;min-width:18px;min-height:24px;border:1.5px solid var(--border);border-radius:3px;padding:0 4px;font-size:22px;background:#fff;cursor:pointer;margin-bottom:36px;}
+.pow-exp.active-slot{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+.slot-empty::after{content:'□';color:var(--text-light);font-size:14px;}
+
+/* Mixed number token */
+.token.mixed-tok{display:inline-flex;align-items:center;gap:8px;}
+.mixed-whole{font-size:46px;min-width:44px;min-height:56px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--border);border-radius:4px;padding:0 6px;cursor:pointer;}
+.mixed-whole.active-slot{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+.mixed-frac-part{display:inline-flex;flex-direction:column;align-items:stretch;gap:0;}
+
+/* Log token */
+.token.log-tok{display:inline-flex;align-items:center;gap:0;}
+.log-label-wrap{display:inline-flex;flex-direction:row;align-items:flex-end;gap:0;margin-right:3px;}
+.log-label{font-size:36px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text);line-height:1;}
+.log-base{font-size:18px;min-width:20px;min-height:22px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--border);border-radius:3px;padding:0 3px;cursor:pointer;
+  align-self:flex-end;margin-bottom:-4px;}
+.log-base.active-slot{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+.log-arg{font-size:44px;min-width:32px;min-height:50px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--border);border-radius:3px;padding:0 5px;cursor:pointer;}
+.log-arg.active-slot{border-color:var(--green);box-shadow:0 0 0 2px rgba(46,125,82,.12);}
+
+/* cursor blink inside slots */
+.slot-cursor{display:inline-block;width:2px;height:.75em;background:var(--green);border-radius:2px;animation:blink 1s step-end infinite;vertical-align:-.05em;margin-left:1px;}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:4px;margin-bottom:4px;}
+button{flex:1;height:var(--key-h);border:1.5px solid var(--border);border-radius:var(--rxs);background:var(--num-bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .11s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;box-shadow:0 1px 0 var(--border),0 1px 3px rgba(46,125,82,.08);}
+.row-sci button{height:58px;}
+.row-trig button,.row-clear button{height:42px;}
+.row-misc button{height:34px;}
+.row-misc .key-pri{font-size:13px!important;}
+.row-num button{height:52px;font-size:20px;font-weight:500;}
+button:hover{border-color:var(--green);transform:translateY(-1px);box-shadow:0 3px 7px rgba(46,125,82,.15);}
+button:active{transform:scale(.96) translateY(0);box-shadow:none;}
+.key-pri{font-size:14px;line-height:1;color:#1a2e22;}
+button.fn{background:var(--fn-bg);color:#1a2e22;border-color:var(--green-mid);}
+button.fn:hover{border-color:var(--green);color:#000;background:var(--green-pale);}
+button.op{background:var(--op-bg);color:#1a2e22;border-color:var(--green-mid);font-size:18px;font-weight:700;}
+button.op:hover{background:var(--green-pale);border-color:var(--green);}
+button.num{background:#fff;color:#1a2e22;border-color:#e8eeeb;font-family:'DM Mono',monospace;font-size:18px;font-weight:600;}
+button.num:hover{border-color:var(--green);color:#000;}
+button.eq{background:var(--green);color:#fff;border-color:var(--green-light);font-size:18px;box-shadow:0 3px 10px rgba(46,125,82,.3),0 1px 0 var(--green-light);}
+button.eq:hover{background:var(--green-light);transform:translateY(-1px);}
+button.clear{background:#fdf0ee;color:#a02020;border-color:#f5ccc6;font-weight:700;}
+button.clear:hover{background:#fce4e0;border-color:#a02020;}
+button.key-shift{background:var(--green-pale);color:#1a2e22;border-color:var(--green-mid);font-weight:800;}
+.calc-app.shift-on .key-shift{background:var(--green)!important;color:#fff!important;box-shadow:0 3px 10px rgba(46,125,82,.35)!important;}
+button.wide{flex:2;}
+
+/* natural-display button icons */
+.nd-key{display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.nd-frac{display:flex;flex-direction:column;align-items:center;gap:1px;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:#1a2e22;}
+.nd-frac-bar{width:18px;height:1.5px;background:#1a2e22;border-radius:1px;}
+/* sqrt button icon — SVG radical */
+.nd-sqrt-svg{display:block;pointer-events:none;overflow:visible;}
+/* pow button icon: base with raised exp */
+.nd-pow-wrap{display:inline-flex;align-items:flex-end;gap:1px;font-family:'DM Mono',monospace;color:#1a2e22;}
+.nd-pow-base-box{display:inline-flex;align-items:center;justify-content:center;width:13px;height:16px;border:1.5px solid #1a2e22;border-radius:2px;font-size:9px;}
+.nd-pow-exp-box{display:inline-flex;align-items:center;justify-content:center;width:10px;height:12px;border:1.5px solid #1a2e22;border-radius:2px;font-size:8px;margin-bottom:5px;}
+/* sq button: □ with raised 2 */
+.nd-sq-wrap{display:inline-flex;align-items:flex-end;gap:0;font-family:'DM Mono',monospace;color:#1a2e22;}
+.nd-sq-base{display:inline-flex;align-items:center;justify-content:center;width:15px;height:18px;border:1.5px solid #1a2e22;border-radius:2px;font-size:9px;}
+.nd-sq-exp{font-size:12px;margin-bottom:7px;font-weight:700;}
+
+/* arrow pad */
+.arrow-pad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:2px;flex:1.8;}
+.arrow-pad button{height:34px!important;font-size:11px;}
+.arrow-pad button{height:26px;font-size:11px;background:var(--green-pale);color:#1a2e22;border-color:var(--green-mid);}
+.arr-blank{background:transparent!important;border-color:transparent!important;cursor:default!important;pointer-events:none;box-shadow:none!important;transform:none!important;}
+
+/* HISTORY */
+.history-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 1px 6px rgba(46,125,82,.07);display:flex;flex-direction:column;overflow:hidden;}
+.history-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none;flex-shrink:0;}
+.history-header:hover{background:var(--green-pale);}
+.history-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;}
+.history-chevron{font-size:10px;color:var(--text-light);transition:transform .25s ease;display:inline-block;}
+.history-panel.collapsed .history-chevron{transform:rotate(-90deg);}
+.history-body{overflow:hidden;max-height:600px;transition:max-height .3s ease, padding .3s ease;padding:0 14px 14px;}
+.history-panel.collapsed .history-body{max-height:0;padding:0 14px;}
+.history-clear{background:none;border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--text-light);cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:none;height:auto;flex:0;}
+.history-clear:hover{border-color:var(--red);color:var(--red);transform:none;box-shadow:none;}
+.history-list{overflow-y:auto;display:flex;flex-direction:column;gap:5px;max-height:560px;}
+.history-empty{text-align:center;color:var(--text-light);font-size:12px;padding:24px 0;line-height:1.6;}
+.history-item{background:var(--off-white);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;cursor:pointer;transition:all .11s;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.history-item:hover{border-color:var(--green);background:var(--green-pale);}
+.history-left{flex:1;min-width:0;}
+.history-expr{font-size:10px;color:var(--text-light);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-time{font-size:9px;color:var(--text-light);margin-top:1px;opacity:.7;}
+.history-result{font-size:15px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;white-space:nowrap;}
+.history-recall{font-size:9px;color:var(--green-dark);background:var(--green-mid);border-radius:3px;padding:1px 4px;flex-shrink:0;font-weight:600;}
+.history-list::-webkit-scrollbar{width:4px;}
+.history-list::-webkit-scrollbar-thumb{background:var(--green-mid);border-radius:4px;}
+
+/* STATISTICS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:0 1px 6px rgba(46,125,82,.07);margin-bottom:14px;}
+.card-title{font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.stats-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.stat-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.stat-chip{background:var(--off-white);border:1px solid var(--border);border-radius:var(--rxs);padding:9px 12px;}
+.stat-chip-label{font-size:9px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;}
+.stat-chip-val{font-size:17px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;margin-top:2px;word-break:break-all;}
+.data-input{width:100%;background:var(--off-white);border:1.5px solid var(--border);border-radius:var(--rsm);padding:9px 11px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);resize:vertical;min-height:80px;outline:none;}
+.data-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(46,125,82,.1);}
+.action-btn{background:var(--green);color:#fff;border:none;border-radius:var(--rsm);padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;box-shadow:0 2px 8px rgba(46,125,82,.3);height:auto;flex:0;}
+.action-btn:hover{background:var(--green-light);transform:translateY(-1px);}
+.stats-type-bar{display:flex;align-items:center;gap:8px;background:var(--off-white);border:1.5px solid var(--border);border-radius:var(--rsm);padding:10px 14px;margin-bottom:16px;}
+.stats-type-label{font-size:10px;font-weight:700;color:var(--text-light);letter-spacing:.5px;text-transform:uppercase;margin-right:4px;}
+.stats-type-btn{background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;color:var(--text-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .13s;height:auto;flex:0;box-shadow:none;}
+.stats-type-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.twovar-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+.twovar-table th{background:var(--green-pale);color:var(--green-dark);font-weight:700;padding:6px 10px;text-align:left;border-bottom:2px solid var(--green-mid);font-size:10px;}
+.twovar-table td{padding:4px 6px;border-bottom:1px solid var(--border);}
+.twovar-table td input{width:100%;background:transparent;border:none;outline:none;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);padding:2px 4px;}
+.twovar-table td input:focus{background:var(--green-pale);border-radius:3px;}
+.twovar-add-row{background:none;border:1px dashed var(--border);border-radius:var(--rsm);width:100%;padding:6px;font-size:11px;color:var(--text-light);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;height:auto;flex:0;box-shadow:none;}
+.twovar-add-row:hover{border-color:var(--green);color:var(--green);transform:none;box-shadow:none;}
+</style>
+</head>
+<body>
+<div class="app-shell"><div class="device sidebar-collapsed">
+
+<!-- HEADER -->
+<div class="device-header">
+  <div class="logo-lockup">
+    <div class="logo-circle">
+      <img src="data:image/png;base64,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" style="width:34px;height:34px;object-fit:contain;">
+    </div>
+    <div><div class="brand-name">Sprout Calculator</div><div class="brand-sub">by Homegrown Learning</div></div>
+  </div>
+</div>
+
+<div class="device-content">
+<!-- ══ CALCULATOR ══ -->
+<div class="module active" id="module-calculator">
+  <div class="calc-layout" id="calcLayout">
+    <div class="calc-app" id="calcApp">
+
+      <!-- SCREEN -->
+      <div class="screen-wrap">
+        <div class="screen-module-row">
+          <button class="screen-mod-btn active" id="smb-calculator" onclick="switchModule('calculator')">
+            <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="8" height="3" rx="1" fill="currentColor" opacity=".6"/><line x1="3" y1="8.5" x2="5.5" y2="8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="8.5" y1="8.5" x2="11" y2="8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Calculate
+          </button>
+          <button class="screen-mod-btn" id="smb-statistics" onclick="switchModule('statistics')">
+            <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="4" width="3" height="9" rx="1" fill="currentColor" opacity=".75"/><rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor"/></svg>
+            Statistics
+          </button>
+          <span id="shiftInd">SHIFT</span>
+        </div>
+        <div class="screen-top-row">
+          <button class="mode-btn active" id="btnDeg" onclick="setMode('deg')">DEG</button>
+          <button class="mode-btn" id="btnRad" onclick="setMode('rad')">RAD</button>
+        </div>
+        <div class="disp-expr" id="dispExpr"></div>
+        <div class="disp-render" id="dispRender"></div>
+      </div>
+
+      <!-- FORMAT -->
+      <div class="format-bar">
+        <span class="format-label">Format:</span>
+        <button class="fmt-btn active" onclick="setFormat('decimal')" id="fmt-decimal">Decimal</button>
+        <button class="fmt-btn" onclick="setFormat('fraction')" id="fmt-fraction">Fraction</button>
+        <button class="fmt-btn" onclick="setFormat('mixed')" id="fmt-mixed">Mixed</button>
+        <button class="fmt-btn" onclick="setFormat('exact')" id="fmt-exact">Exact</button>
+        <div class="round-wrap" id="roundWrap">
+          <button class="fmt-btn" id="fmt-round" onclick="toggleRoundPopover()">Round</button>
+          <div class="round-popover" id="roundPopover">
+            <div class="round-popover-label">Decimal places</div>
+            <div class="round-input-row">
+              <input id="roundDpInput" class="round-dp-input" type="number" min="0" max="15" value="2" onclick="event.stopPropagation()">
+              <button class="round-go-btn" onmousedown="event.stopPropagation();applyRound()">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 1: SHIFT + NATURAL DISPLAY -->
+      <div class="btn-row row-sci">
+        <button class="key-shift fn" onclick="toggleShift()" style="flex:1.1"><span class="key-pri" style="font-size:12px;font-weight:800">SHIFT</span></button>
+        <!-- a/b fraction -->
+        <button class="fn" id="sbtn-frac" onclick="insertFraction()">
+          <div class="nd-key"><div class="nd-frac"><span>a</span><div class="nd-frac-bar"></div><span>b</span></div></div>
+        </button>
+        <!-- √□ / ⁿ√□ -->
+        <button class="fn" id="sbtn-sqrt" onclick="insertSqrt()">
+          <svg class="nd-sqrt-svg" width="32" height="22" viewBox="0 0 32 22" fill="none">
+            <polyline points="1,13 5,13 9,20 14,3 20,3" stroke="#1a2e22" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+            <line x1="20" y1="3" x2="31" y2="3" stroke="#1a2e22" stroke-width="1.6" stroke-linecap="round"/>
+            <text x="22" y="15" font-family="DM Mono,monospace" font-size="9" fill="#8aab98">□</text>
+          </svg>
+        </button>
+        <!-- □^□ power -->
+        <button class="fn" id="sbtn-pow" onclick="insertPow()">
+          <div class="nd-key"><div class="nd-pow-wrap"><span class="nd-pow-base-box">□</span><span class="nd-pow-exp-box">□</span></div></div>
+        </button>
+        <!-- □² square -->
+        <button class="fn" id="sbtn-sq" onclick="insertSq()">
+          <div class="nd-key"><div class="nd-sq-wrap"><span class="nd-sq-base">□</span><span class="nd-sq-exp">2</span></div></div>
+        </button>
+        <button class="fn" id="sbtn-log" onclick="insertLog()">
+          <div class="nd-key" style="display:flex;align-items:flex-end;gap:1px;font-family:'DM Mono',monospace;font-weight:500;color:#1a2e22;line-height:1">
+            <div style="display:flex;flex-direction:column;align-items:flex-start">
+              <span style="font-size:16px;line-height:1">log</span>
+              <span style="font-size:9px;border:1px solid var(--border);border-radius:2px;padding:0 2px;min-width:10px;text-align:center">□</span>
+            </div>
+            <span style="font-size:14px;border:1px solid var(--border);border-radius:2px;padding:0 3px;margin-bottom:1px">□</span>
+          </div>
+        </button>
+        <button class="fn" id="sbtn-ln"  onclick="doFn('ln')"><span class="key-pri" style="font-size:15px">ln</span></button>
+        <button class="fn" id="sbtn-sci" onclick="insertSciNotation()">
+          <div class="nd-key" style="display:flex;align-items:flex-end;gap:1px;font-family:'DM Mono',monospace;font-weight:500;color:#1a2e22;line-height:1;font-size:11px;">
+            <span style="font-size:11px;">×10</span><span style="font-size:8px;margin-bottom:1px;">n</span>
+          </div>
+        </button>
+        <button class="fn" onclick="openFnMenu()" style="flex:1.2"><span class="key-pri" style="font-size:13px">f(x)</span></button>
+      </div>
+
+      <!-- ROW 2: TRIG -->
+      <div class="btn-row row-trig">
+        <button class="fn" id="sbtn-sin" onclick="doFn('sin')"><span class="key-pri">sin</span></button>
+        <button class="fn" id="sbtn-cos" onclick="doFn('cos')"><span class="key-pri">cos</span></button>
+        <button class="fn" id="sbtn-tan" onclick="doFn('tan')"><span class="key-pri">tan</span></button>
+        <button class="fn" id="sbtn-pi"  onclick="doFn('pi')"><span class="key-pri">π</span></button>
+        <button class="fn" id="sbtn-e"   onclick="doFn('e_const')"><span class="key-pri">e</span></button>
+        <button class="fn" onclick="insertText('(')"><span class="key-pri">(</span></button>
+        <button class="fn" onclick="insertText(')')"><span class="key-pri">)</span></button>
+      </div>
+
+      <!-- ROW 3: MISC + DMS + ARROWS -->
+      <div class="btn-row row-misc">
+        <button class="fn" id="sbtn-abs" onclick="doFn('abs')" style="flex:0.5"><span class="key-pri">|x|</span></button>
+        <button class="fn" onclick="toggleSign()" style="flex:0.5"><span class="key-pri">±</span></button>
+        <button class="fn" id="sbtn-dms" onclick="insertDMS()" style="flex:0.6"><span class="key-pri">°</span></button>
+        <div class="arrow-pad" style="flex:2.4">
+          <button class="arr-blank"></button><button onclick="moveCursor('up')">▲</button><button class="arr-blank"></button>
+          <button onclick="moveCursor('left')">◀</button><button onclick="moveCursor('down')">▼</button><button onclick="moveCursor('right')">▶</button>
+        </div>
+      </div>
+
+      <!-- NUMPAD -->
+      <div class="btn-row row-clear">
+        <button class="clear" onclick="clearAll()"><span class="key-pri">AC</span></button>
+        <button class="clear" onclick="clearEntry()"><span class="key-pri">CE</span></button>
+        <button class="clear" onclick="backspace()"><span class="key-pri">⌫</span></button>
+        <button class="op" onclick="insertText('%')"><span class="key-pri">%</span></button>
+        <button class="op" onclick="insertDiv()"><span class="key-pri">÷</span></button>
+      </div>
+      <div class="btn-row row-num">
+        <button class="num" onclick="inputNum('7')">7</button><button class="num" onclick="inputNum('8')">8</button><button class="num" onclick="inputNum('9')">9</button><button class="op" onclick="insertMul()">×</button>
+      </div>
+      <div class="btn-row row-num">
+        <button class="num" onclick="inputNum('4')">4</button><button class="num" onclick="inputNum('5')">5</button><button class="num" onclick="inputNum('6')">6</button><button class="op" onclick="insertText('-')">−</button>
+      </div>
+      <div class="btn-row row-num">
+        <button class="num" onclick="inputNum('1')">1</button><button class="num" onclick="inputNum('2')">2</button><button class="num" onclick="inputNum('3')">3</button><button class="op" onclick="insertText('+')">+</button>
+      </div>
+      <div class="btn-row row-num">
+        <button class="num wide" onclick="inputNum('0')">0</button><button class="num" onclick="inputDot()">.</button><button class="eq wide" onclick="calculate()">=</button>
+      </div>
+
+    </div><!-- /calc-app -->
+
+    <!-- f(x)/g(x) MENU -->
+    <div class="fn-menu-overlay" id="fnMenuOverlay" onclick="if(event.target===this)closeFnMenu()">
+      <div class="fn-menu-card">
+        <div class="fn-menu-header">
+          <span class="fn-menu-title">Function Editor</span>
+          <button class="fn-menu-close" onclick="closeFnMenu()">×</button>
+        </div>
+        <div class="fn-menu-body">
+          <!-- Mode selector -->
+          <div class="fn-menu-section">
+            <div class="fn-menu-row" style="gap:6px">
+              <button class="fn-menu-btn" id="fnDefFx" onclick="selectFnDef('f')">Define f(x)</button>
+              <button class="fn-menu-btn" id="fnDefGx" onclick="selectFnDef('g')">Define g(x)</button>
+              <button class="fn-menu-btn" id="fnEvalFx" onclick="selectFnEval('f')">f(□)</button>
+              <button class="fn-menu-btn" id="fnEvalGx" onclick="selectFnEval('g')">g(□)</button>
+              <button class="fn-menu-btn" id="fnEvalFG" onclick="selectFnEval('fg')">f(g(□))</button>
+              <button class="fn-menu-btn" id="fnEvalGF" onclick="selectFnEval('gf')">g(f(□))</button>
+            </div>
+          </div>
+
+          <!-- Display for define mode -->
+          <div id="fnDefRow" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span class="fn-input-label" id="fnDefLabel">f(x) =</span>
+              <div id="fnDefDisplay" style="flex:1;min-height:38px;background:var(--num-bg);border:1.5px solid var(--green);border-radius:8px;padding:6px 10px;font-family:'DM Mono',monospace;font-size:16px;color:var(--text);display:flex;align-items:center;word-break:break-all;"></div>
+              <button class="fn-menu-action" style="width:auto;padding:8px 14px;flex-shrink:0" onmousedown="event.stopPropagation()" onclick="saveFnDef()">Save</button>
+            </div>
+            <!-- Mini pad -->
+            <div class="fn-pad">
+              <div class="fn-pad-row">
+                <button class="fn-pad-btn fn-pad-pron" onmousedown="event.stopPropagation();fnPad('x')"><em>x</em></button>
+                <button class="fn-pad-btn fn-pad-pron" onmousedown="event.stopPropagation();fnPad('y')"><em>y</em></button>
+                <button class="fn-pad-btn fn-pad-pron" onmousedown="event.stopPropagation();fnPad('n')"><em>n</em></button>
+                <button class="fn-pad-btn fn-pad-fn" onmousedown="event.stopPropagation();fnPad('sin(')">sin</button>
+                <button class="fn-pad-btn fn-pad-fn" onmousedown="event.stopPropagation();fnPad('cos(')">cos</button>
+                <button class="fn-pad-btn fn-pad-fn" onmousedown="event.stopPropagation();fnPad('tan(')">tan</button>
+                <button class="fn-pad-btn fn-pad-fn" onmousedown="event.stopPropagation();fnPad('sqrt(')">√</button>
+                <button class="fn-pad-btn fn-pad-fn" onmousedown="event.stopPropagation();fnPad('^')"><em>x</em>ⁿ</button>
+                <button class="fn-pad-btn fn-pad-fn" onmousedown="event.stopPropagation();fnPad('^2')"><em>x</em>²</button>
+              </div>
+              <div class="fn-pad-row">
+                <button class="fn-pad-btn fn-pad-fn" onclick="fnPadClick(event,'(')">( </button>
+                <button class="fn-pad-btn fn-pad-fn" onclick="fnPadClick(event,')')"> )</button>
+                <button class="fn-pad-btn fn-pad-fn" onclick="fnPadClick(event,'π')">π</button>
+                <button class="fn-pad-btn fn-pad-fn" onclick="fnPadClick(event,'e')">e</button>
+                <button class="fn-pad-btn fn-pad-fn" onclick="fnPadClick(event,'abs(')">|x|</button>
+                <button class="fn-pad-btn fn-pad-fn" onclick="fnPadClick(event,'ln(')">ln</button>
+                <button class="fn-pad-btn fn-pad-op" onclick="fnPadClick(event,'+')">+</button>
+                <button class="fn-pad-btn fn-pad-op" onclick="fnPadClick(event,'-')">−</button>
+                <button class="fn-pad-btn fn-pad-op" onclick="fnPadClick(event,'*')">×</button>
+                <button class="fn-pad-btn fn-pad-op" onclick="fnPadClick(event,'/')">÷</button>
+              </div>
+              <div class="fn-pad-row">
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('0')">0</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('1')">1</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('2')">2</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('3')">3</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('4')">4</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('5')">5</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('6')">6</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('7')">7</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('8')">8</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('9')">9</button>
+                <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnPad('.')">.</button>
+                <button class="fn-pad-btn fn-pad-del" onmousedown="event.stopPropagation();fnPadDel()">⌫</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eval input -->
+          <div id="fnEvalRow" style="display:none;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fn-input-label" id="fnEvalLabel">x =</span>
+              <input id="fnEvalInput" style="flex:1;height:38px;background:var(--num-bg);border:1.5px solid var(--green);border-radius:8px;padding:6px 10px;font-family:'DM Mono',monospace;font-size:16px;color:var(--text);outline:none;" placeholder="type or use pad" oninput="fnEvalBuf=this.value">
+              <button class="fn-menu-action" style="width:auto;padding:8px 14px;flex-shrink:0" onclick="event.stopPropagation();evalFn()">Go</button>
+            </div>
+            <div class="fn-pad-row">
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('0')">0</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('1')">1</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('2')">2</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('3')">3</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('4')">4</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('5')">5</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('6')">6</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('7')">7</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('8')">8</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('9')">9</button>
+              <button class="fn-pad-btn fn-pad-op" onmousedown="event.stopPropagation();fnEvalPad('-')">−</button>
+              <button class="fn-pad-btn fn-pad-num" onmousedown="event.stopPropagation();fnEvalPad('.')">.</button>
+              <button class="fn-pad-btn fn-pad-del" onmousedown="event.stopPropagation();fnEvalPadDel()">⌫</button>
+            </div>
+            <div id="fnEvalResult" style="display:none;background:#f0f8f3;border:1.5px solid var(--green-mid);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:18px;color:#1a2e22;text-align:center;font-weight:600;"></div>
+          </div>
+
+          <!-- Current defs -->
+          <div class="fn-menu-section" id="fnDefsDisplay" style="margin-top:10px">
+            <div class="fn-menu-section-title">Current definitions</div>
+            <div id="fnDefsText" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-mid)">None defined</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-panel" id="historyPanel">
+      <div class="history-header" onclick="toggleHistory()">
+        <span class="history-title">📋 History <span class="history-chevron">▼</span></span>
+        <button class="history-clear" onclick="event.stopPropagation();clearHistory()">Clear all</button>
+      </div>
+      <div class="history-body">
+        <div class="history-list" id="historyList">
+          <div class="history-empty" id="historyEmpty">No calculations yet.<br>Your history appears here.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /module-calculator -->
+
+<!-- ══ STATISTICS ══ -->
+<div class="module" id="module-statistics">
+  <div class="stats-type-bar">
+    <button class="screen-mod-btn" onclick="switchModule('calculator')">
+      <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="8" height="3" rx="1" fill="currentColor" opacity=".6"/></svg>
+      Calculate
+    </button>
+    <button class="screen-mod-btn active" style="pointer-events:none;">
+      <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="4" width="3" height="9" rx="1" fill="currentColor" opacity=".75"/><rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor"/></svg>
+      Statistics
+    </button>
+    <div style="width:1px;height:20px;background:var(--border);margin:0 6px;flex-shrink:0"></div>
+    <span class="stats-type-label">Mode:</span>
+    <button class="stats-type-btn active" id="stb-1var" onclick="setStatsType('1var')">1-Variable</button>
+    <button class="stats-type-btn" id="stb-2var" onclick="setStatsType('2var')">2-Variable</button>
+  </div>
+
+  <div id="stats-1var-panel">
+    <div class="stats-layout">
+      <div>
+        <div class="card">
+          <div class="card-title">Data — x values</div>
+          <textarea class="data-input" id="statsInput1" placeholder="Enter numbers separated by commas or new lines&#10;e.g. 12, 15, 9, 22, 18"></textarea>
+          <button class="action-btn" onclick="calcStats1()" style="width:100%;margin-top:10px">Calculate</button>
+          <div style="margin-top:12px"><div class="card-title">Sorted</div><div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-mid);word-break:break-all" id="statsSorted1">—</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Results</div>
+          <div class="stat-result-grid">
+            <div class="stat-chip"><div class="stat-chip-label">n (Count)</div><div class="stat-chip-val" id="s1-n">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">Σx (Sum)</div><div class="stat-chip-val" id="s1-sum">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">x̄ (Mean)</div><div class="stat-chip-val" id="s1-mean">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">Median</div><div class="stat-chip-val" id="s1-med">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">Mode</div><div class="stat-chip-val" id="s1-mode">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">Range</div><div class="stat-chip-val" id="s1-range">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">σx (Pop SD)</div><div class="stat-chip-val" id="s1-popsd">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">sx (Samp SD)</div><div class="stat-chip-val" id="s1-sampsd">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">Σx² (Sum Sq)</div><div class="stat-chip-val" id="s1-sumx2">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">Min / Max</div><div class="stat-chip-val" id="s1-minmax">—</div></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-title">Distribution</div><canvas id="statsChart1" height="130"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stats-2var-panel" style="display:none">
+    <div class="stats-layout">
+      <div>
+        <div class="card">
+          <div class="card-title">Data — x &amp; y pairs</div>
+          <div style="overflow-x:auto">
+            <table class="twovar-table"><thead><tr><th>#</th><th>x</th><th>y</th></tr></thead><tbody id="twovarBody"></tbody></table>
+          </div>
+          <button class="twovar-add-row" onclick="addTwoVarRow()">+ Add row</button>
+          <button class="action-btn" onclick="calcStats2()" style="width:100%">Calculate</button>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Results</div>
+          <div class="stat-result-grid">
+            <div class="stat-chip"><div class="stat-chip-label">n</div><div class="stat-chip-val" id="s2-n">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">x̄</div><div class="stat-chip-val" id="s2-meanx">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">ȳ</div><div class="stat-chip-val" id="s2-meany">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">σx</div><div class="stat-chip-val" id="s2-sdx">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">σy</div><div class="stat-chip-val" id="s2-sdy">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">r (Corr)</div><div class="stat-chip-val" id="s2-r">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">a (slope)</div><div class="stat-chip-val" id="s2-a">—</div></div>
+            <div class="stat-chip"><div class="stat-chip-label">b (intercept)</div><div class="stat-chip-val" id="s2-b">—</div></div>
+            <div class="stat-chip" style="grid-column:1/-1"><div class="stat-chip-label">Regression line</div><div class="stat-chip-val" id="s2-line" style="font-size:13px">—</div></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-title">Scatter Plot</div><canvas id="statsChart2" height="140"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /module-statistics -->
+</div><!-- /device-content -->
+</div><!-- /device -->
+</div>
+
+<script>
+/* ══ MODULE / STATS ══ */
+function switchModule(id){
+  document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+  document.getElementById('module-'+id).classList.add('active');
+  ['calculator','statistics'].forEach(x=>{const b=document.getElementById('smb-'+x);if(b)b.classList.toggle('active',x===id);});
+}
+let statsType='1var';
+function setStatsType(t){
+  statsType=t;
+  document.getElementById('stb-1var').classList.toggle('active',t==='1var');
+  document.getElementById('stb-2var').classList.toggle('active',t==='2var');
+  document.getElementById('stats-1var-panel').style.display=t==='1var'?'block':'none';
+  document.getElementById('stats-2var-panel').style.display=t==='2var'?'block':'none';
+}
+
+/* ══ CALCULATOR STATE ══ */
+let mode='deg', shiftOn=false, ansFormat='decimal';
+let tokens=[{type:'text',val:''}], cursor=0, fracFocus=null, justCalc=false;
+let rawResult=null, calcHistory=[];
+
+/* ── SHIFT ── */
+function toggleShift(){shiftOn=!shiftOn;document.getElementById('calcApp').classList.toggle('shift-on',shiftOn);updateShiftLabels();}
+const shiftDefs={
+  'sbtn-frac': [
+    '<div class="nd-key"><div class="nd-frac"><span>a</span><div class="nd-frac-bar"></div><span>b</span></div></div>',
+    '<div class="nd-key" style="display:flex;align-items:center;gap:3px;font-family:DM Mono,monospace;font-weight:700;color:#1a2e22"><span style="font-size:17px">a</span><div style="display:flex;flex-direction:column;align-items:center;gap:0;font-size:11px;line-height:1.2"><span>b</span><div style="height:1.5px;width:12px;background:#1a2e22;margin:1px 0"></div><span>c</span></div></div>'
+  ],
+  'sbtn-sqrt': [
+    '<svg class="nd-sqrt-svg" width="32" height="22" viewBox="0 0 32 22" fill="none"><polyline points="1,13 5,13 9,20 14,3 20,3" stroke="#1a2e22" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" fill="none"/><line x1="20" y1="3" x2="31" y2="3" stroke="#1a2e22" stroke-width="1.6" stroke-linecap="round"/><text x="22" y="15" font-family="DM Mono,monospace" font-size="9" fill="#8aab98">□</text></svg>',
+    '<svg class="nd-sqrt-svg" width="38" height="22" viewBox="0 0 38 22" fill="none"><text x="1" y="10" font-family="DM Mono,monospace" font-size="8" fill="#1a2e22">n</text><polyline points="7,13 11,13 15,20 20,3 26,3" stroke="#1a2e22" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" fill="none"/><line x1="26" y1="3" x2="37" y2="3" stroke="#1a2e22" stroke-width="1.6" stroke-linecap="round"/><text x="28" y="15" font-family="DM Mono,monospace" font-size="9" fill="#8aab98">□</text></svg>'
+  ],
+  'sbtn-pow': [
+    '<div class="nd-key"><div class="nd-pow-wrap"><span class="nd-pow-base-box">□</span><span class="nd-pow-exp-box">□</span></div></div>',
+    '<div class="nd-key"><div class="nd-pow-wrap"><span class="nd-pow-base-box">□</span><span class="nd-pow-exp-box">□</span></div></div>'
+  ],
+  'sbtn-sq': [
+    '<div class="nd-key"><div class="nd-sq-wrap"><span class="nd-sq-base">□</span><span class="nd-sq-exp">2</span></div></div>',
+    '<div class="nd-key"><div class="nd-sq-wrap"><span class="nd-sq-base">□</span><span class="nd-sq-exp">3</span></div></div>'
+  ],
+  'sbtn-log':  ['<div class="nd-key" style="display:flex;align-items:flex-end;gap:0;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:#1a2e22"><span>log</span><div style="display:flex;flex-direction:column;align-items:center;font-size:8px;gap:0;margin-bottom:1px"><span style="border:1px solid var(--border);border-radius:2px;padding:0 2px;min-width:10px;text-align:center">□</span></div><div style="border:1px solid var(--border);border-radius:2px;padding:0 3px;font-size:11px;min-width:14px;text-align:center;margin-left:1px">□</div></div>','<span class="key-pri">10<sup style="font-size:.6em">x</sup></span>'],
+  'sbtn-ln':   ['<span class="key-pri" style="font-size:15px">ln</span>','<span class="key-pri">e<sup style="font-size:.6em">x</sup></span>'],
+  'sbtn-sci':  ['<div class="nd-key" style="display:flex;align-items:flex-end;gap:1px;font-family:\'DM Mono\',monospace;font-weight:500;color:#1a2e22;line-height:1;font-size:11px;"><span style="font-size:11px;">×10</span><span style="font-size:8px;margin-bottom:1px;">n</span></div>','<div class="nd-key" style="display:flex;align-items:flex-end;gap:1px;font-family:\'DM Mono\',monospace;font-weight:500;color:#1a2e22;line-height:1;font-size:11px;"><span style="font-size:11px;">×10</span><span style="font-size:8px;margin-bottom:1px;">n</span></div>'],
+  'sbtn-sin':  ['<span class="key-pri">sin</span>','<span class="key-pri">sin<sup style="font-size:.65em">-1</sup></span>'],
+  'sbtn-cos':  ['<span class="key-pri">cos</span>','<span class="key-pri">cos<sup style="font-size:.65em">-1</sup></span>'],
+  'sbtn-tan':  ['<span class="key-pri">tan</span>','<span class="key-pri">tan<sup style="font-size:.65em">-1</sup></span>'],
+  'sbtn-pi':   ['<span class="key-pri">π</span>','<span class="key-pri">2π</span>'],
+  'sbtn-e':    ['<span class="key-pri">e</span>','<span class="key-pri">φ</span>'],
+  'sbtn-abs':  ['<span class="key-pri">|x|</span>','<span class="key-pri">sgn</span>'],
+  'sbtn-dms':  ['<span class="key-pri">°</span>','<span class="key-pri" style="font-size:11px">°↔DMS</span>'],
+};
+function updateShiftLabels(){
+  Object.entries(shiftDefs).forEach(([id,[norm,sh]])=>{
+    const el=document.getElementById(id);if(el)el.innerHTML=shiftOn?sh:norm;
+  });
+}
+function clearShift(){shiftOn=false;document.getElementById('calcApp').classList.remove('shift-on');updateShiftLabels();}
+
+function setMode(m){mode=m;document.getElementById('btnDeg').classList.toggle('active',m==='deg');document.getElementById('btnRad').classList.toggle('active',m==='rad');}
+function setFormat(f){
+  ansFormat=f;
+  ['decimal','fraction','mixed','exact'].forEach(x=>document.getElementById('fmt-'+x).classList.toggle('active',x===f));
+  // deactivate round button when switching format
+  document.getElementById('fmt-round').classList.remove('active');
+  document.getElementById('fmt-round').textContent='Round';
+  roundDp=null; closeRoundPopover();
+  if(rawResult!==null&&justCalc){tokens=makeResultTokens(formatResult(rawResult));renderDisplay();}
+}
+let roundDp=null;
+function toggleRoundPopover(){
+  const pop=document.getElementById('roundPopover');
+  pop.classList.toggle('open');
+  if(pop.classList.contains('open'))setTimeout(()=>document.getElementById('roundDpInput').focus(),50);
+}
+function closeRoundPopover(){document.getElementById('roundPopover').classList.remove('open');}
+function applyRound(){
+  let dp=parseInt(document.getElementById('roundDpInput').value,10);
+  if(isNaN(dp)||dp<0)dp=0;if(dp>15)dp=15;
+  setRoundDp(dp);
+}
+function setRoundDp(dp){
+  roundDp=dp;
+  document.getElementById('fmt-round').classList.add('active');
+  document.getElementById('fmt-round').textContent='Round: '+dp+'dp';
+  ['decimal','fraction','mixed','exact'].forEach(x=>document.getElementById('fmt-'+x).classList.remove('active'));
+  closeRoundPopover();
+  // Use rawResult if available, otherwise parse the current display
+  let val=rawResult;
+  if(val===null){
+    // try to get number from current tokens
+    let t=tokens[0];
+    if(t&&t.type==='text') val=parseFloat(t.val.replace(/×10\^/,'e').replace(/[^0-9.e+\-]/g,''));
+  }
+  if(val!==null&&!isNaN(val)){
+    tokens=[{type:'text',val:formatRounded(val,dp)}];
+    justCalc=true;renderDisplay();  // rounding always shows as plain decimal
+  }
+}
+function formatRounded(n,dp){
+  if(!isFinite(n)||isNaN(n))return isNaN(n)?'ERROR':'∞';
+  return n.toFixed(dp);
+}
+// Close popover on outside mousedown
+document.addEventListener('mousedown',e=>{
+  if(!document.getElementById('roundWrap').contains(e.target))closeRoundPopover();
+});
+
+/* ── FORMAT RESULT ── */
+function makeResultTokens(formatted){
+  // If formatted is "num/den" → frac token
+  let fracMatch=formatted.match(/^(-?\d+)\/(\d+)$/);
+  if(fracMatch){
+    return [{type:'text',val:''},{type:'frac',num:fracMatch[1],den:fracMatch[2]},{type:'text',val:''}];
+  }
+  // If formatted is "w num/den" (mixed) → text + frac token
+  let mixedMatch=formatted.match(/^(-?\d+) (\d+)\/(\d+)$/);
+  if(mixedMatch){
+    return [{type:'text',val:mixedMatch[1]+' '},{type:'frac',num:mixedMatch[2],den:mixedMatch[3]},{type:'text',val:''}];
+  }
+  return [{type:'text',val:formatted}];
+}
+function formatResult(n){
+  if(!isFinite(n)||isNaN(n))return isNaN(n)?'ERROR':'∞';
+  if(ansFormat==='decimal'){
+    if(Number.isInteger(n)&&Math.abs(n)<1e15)return n.toString();
+    // Use clean scientific notation for very large/small numbers
+    if(Math.abs(n)>=1e10||( Math.abs(n)<1e-4&&n!==0)){
+      let s=n.toPrecision(7);          // 7 sig figs
+      let [coef,exp]=s.split('e');
+      if(exp){
+        coef=parseFloat(coef).toString(); // strip trailing zeros
+        return`${coef}×10^${parseInt(exp,10)}`;
+      }
+    }
+    return parseFloat(n.toPrecision(12)).toString();
+  }
+  if(ansFormat==='fraction'||ansFormat==='mixed'){
+    let f=toFraction(n);if(!f)return parseFloat(n.toPrecision(10)).toString();
+    let[num,den]=f;if(den===1)return num.toString();
+    if(ansFormat==='mixed'&&Math.abs(num)>=den){let w=Math.trunc(num/den),r=Math.abs(num)%den;return r===0?w.toString():`${w} ${r}/${den}`;}
+    return`${num}/${den}`;
+  }
+  if(ansFormat==='exact'){let s=checkSurd(n);if(s)return s;let f=toFraction(n);if(f){let[num,den]=f;return den===1?num.toString():`${num}/${den}`;}return parseFloat(n.toPrecision(10)).toString();}
+  return n.toString();
+}
+function toFraction(x,maxDen=1000){if(Number.isInteger(x))return[x,1];let sign=x<0?-1:1;x=Math.abs(x);let h1=1,h2=0,k1=0,k2=1,b=x;do{let a=Math.floor(b),h=a*h1+h2,k=a*k1+k2;h2=h1;h1=h;k2=k1;k1=k;b=1/(b-a);if(k1>maxDen)break;}while(Math.abs(x-h1/k1)>1e-9);if(k1>maxDen)return null;return[sign*h1,k1];}
+function checkSurd(x){for(let n=2;n<=200;n++){let sq=Math.sqrt(n);if(Math.abs(x-sq)<1e-9)return`√${n}`;if(Math.abs(x+sq)<1e-9)return`-√${n}`;if(Math.abs(x-sq/2)<1e-9)return`√${n}/2`;if(Math.abs(x-sq*2)<1e-9)return`2√${n}`;}return null;}
+
+/* ── TOKEN HELPERS ── */
+function curText(){let t=tokens[cursor];return(t&&t.type==='text')?t:null;}
+const SLOT_TYPES=['frac','sqrt','nthroot','pow','mixed','log'];
+function inSlot(){let t=tokens[cursor];return t&&SLOT_TYPES.includes(t.type)&&fracFocus;}
+
+const MAX_TEXT=14;
+function appendToFocus(s){
+  let tok=tokens[cursor];
+  if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus){
+    if(tok[fracFocus].replace(/[^0-9.]/g,'').length>=MAX_TEXT)return;
+    tok[fracFocus]+=s;renderDisplay();return;
+  }
+  let t=curText();
+  if(t){
+    // count only digits/dots for length check
+    if(t.val.replace(/[^0-9.]/g,'').length>=MAX_TEXT)return;
+    t.val+=s;
+  }else{let ni=cursor+1;ensureTextAt(ni);tokens[ni].val+=s;}
+  renderDisplay();
+}
+function ensureTextAt(idx){if(idx>=tokens.length||tokens[idx].type!=='text')tokens.splice(idx,0,{type:'text',val:''});cursor=idx;fracFocus=null;}
+function inputNum(n){if(justCalc)resetCalc();appendToFocus(n);}
+function inputDot(){if(justCalc)resetCalc();let seg=getActiveSeg();if(!seg.includes('.'))appendToFocus('.');}
+function getActiveSeg(){let tok=tokens[cursor];if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus)return tok[fracFocus];let t=curText();if(!t)return'';let m=t.val.match(/[\d.]*$/);return m?m[0]:'';}
+function insertText(s){if(justCalc)justCalc=false;appendToFocus(s);}
+function insertMul(){if(justCalc)justCalc=false;appendToFocus('×');}
+function insertDiv(){if(justCalc)justCalc=false;appendToFocus('÷');}
+function toggleSign(){let t=curText();if(!t)return;t.val.endsWith('-')?t.val=t.val.slice(0,-1):t.val+='-';renderDisplay();}
+
+/* ── GRAB TRAILING BASE from current text for □² / □^□ ── */
+function grabBase(){
+  // pull trailing word/digits from active slot or text token
+  let tok=tokens[cursor];
+  if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus){
+    let v=tok[fracFocus],m=v.match(/([\w.π]+)$/);
+    if(m){tok[fracFocus]=v.slice(0,v.length-m[0].length);return m[0];}
+    return '';
+  }
+  let t=curText();
+  if(t&&t.val){
+    // If ends with ), grab the entire matching bracketed expression
+    if(t.val.endsWith(')')){
+      let depth=0,i=t.val.length-1;
+      for(;i>=0;i--){
+        if(t.val[i]===')') depth++;
+        else if(t.val[i]==='(') depth--;
+        if(depth===0) break;
+      }
+      if(i>=0){
+        let base=t.val.slice(i);
+        t.val=t.val.slice(0,i);
+        return base;
+      }
+    }
+    let m=t.val.match(/([\w.π]+)$/);
+    if(m){t.val=t.val.slice(0,t.val.length-m[0].length);return m[0];}
+  }
+  return '';
+}
+
+/* ── NATURAL DISPLAY INSERTS ── */
+function insertFraction(){
+  if(justCalc)resetCalc();
+  if(shiftOn){
+    clearShift();
+    let node={type:'mixed',whole:'',num:'',den:''},after={type:'text',val:''};
+    let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+    tokens=[...before,node,after,...rest];cursor=before.length;fracFocus='whole';renderDisplay();
+    return;
+  }
+  let node={type:'frac',num:'',den:''},after={type:'text',val:''};
+  let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+  tokens=[...before,node,after,...rest];cursor=before.length;fracFocus='num';renderDisplay();
+}
+
+function insertSciNotation(){
+  if(justCalc)resetCalc();
+  ensureTextAt(cursor);
+  let t=curText();
+  if(t) t.val+='×';
+  let node={type:'pow',base:'10',exp:''};
+  let after={type:'text',val:''};
+  let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+  tokens=[...before,node,after,...rest];
+  cursor=before.length;
+  fracFocus='exp';
+  renderDisplay();
+}
+function insertLog(){
+  if(justCalc)resetCalc();
+  if(shiftOn){clearShift();appendToFocus('10^(');return;}
+  let node={type:'log',base:'',arg:''},after={type:'text',val:''};
+  let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+  tokens=[...before,node,after,...rest];cursor=before.length;fracFocus='base';renderDisplay();
+}
+function insertSqrt(){
+  if(justCalc)resetCalc();
+  if(shiftOn){
+    clearShift();
+    // nth root token
+    let node={type:'nthroot',deg:'',arg:''},after={type:'text',val:''};
+    let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+    tokens=[...before,node,after,...rest];cursor=before.length;fracFocus='deg';renderDisplay();
+    return;
+  }
+  let node={type:'sqrt',arg:''},after={type:'text',val:''};
+  let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+  tokens=[...before,node,after,...rest];cursor=before.length;fracFocus='arg';renderDisplay();
+}
+
+function insertPow(){
+  // □^□ — grabs trailing base, places cursor in exponent
+  if(justCalc)resetCalc();
+  if(shiftOn)clearShift();
+  // if already inside a slot, just append ^ so prettyVal shows superscript
+  let tok=tokens[cursor];
+  if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus){
+    tok[fracFocus]+='^';renderDisplay();return;
+  }
+  let baseVal=grabBase();
+  let node={type:'pow',base:baseVal,exp:''};
+  let after={type:'text',val:''};
+  let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+  tokens=[...before,node,after,...rest];cursor=before.length;fracFocus='exp';renderDisplay();
+}
+
+function insertSq(){
+  if(justCalc)resetCalc();
+  const expVal=shiftOn?'3':'2';
+  if(shiftOn)clearShift();
+  let tok=tokens[cursor];
+  if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus){
+    // inside slot: append ^2 as text — prettyVal renders as raised superscript
+    tok[fracFocus]+='^'+expVal;renderDisplay();return;
+  }
+  let baseVal=grabBase();
+  let node={type:'pow',base:baseVal,exp:expVal};
+  let after={type:'text',val:''};
+  let before=tokens.slice(0,cursor+1),rest=tokens.slice(cursor+1);
+  tokens=[...before,node,after,...rest];cursor=before.length;fracFocus=null;renderDisplay();
+}
+
+/* ── DMS CONVERSION ── */
+function insertDMS(){
+  if(shiftOn){
+    clearShift();
+    // Convert between decimal degrees and D°M′S″
+    let t=curText();
+    let val=t?t.val.trim():'';
+    if(!val&&rawResult!==null) val=rawResult.toString();
+    // Try parse as DMS → convert to decimal
+    let dmsMatch=val.match(/^(-?\d+(?:\.\d+)?)°(\d+(?:\.\d+)?)′(\d+(?:\.\d+)?)″$/);
+    if(dmsMatch){
+      let d=parseFloat(dmsMatch[1]),m=parseFloat(dmsMatch[2]),s=parseFloat(dmsMatch[3]);
+      let dec=(d<0?-1:1)*(Math.abs(d)+m/60+s/3600);
+      if(t){t.val=parseFloat(dec.toPrecision(10)).toString();}
+      else tokens[cursor]={type:'text',val:parseFloat(dec.toPrecision(10)).toString()};
+      renderDisplay();return;
+    }
+    // Try parse as decimal → convert to DMS
+    let num=parseFloat(val);
+    if(!isNaN(num)){
+      let neg=num<0;num=Math.abs(num);
+      let d=Math.floor(num);
+      let mTotal=(num-d)*60;
+      let m=Math.floor(mTotal);
+      let s=parseFloat(((mTotal-m)*60).toPrecision(6));
+      let str=(neg?'-':'')+d+'°'+m+'′'+s+'″';
+      if(t){t.val=str;}else tokens[cursor]={type:'text',val:str};
+      renderDisplay();return;
+    }
+    return;
+  }
+  // Normal press — just insert °
+  appendToFocus('°');
+}
+
+const fnMap={sin:['sin(','asin('],cos:['cos(','acos('],tan:['tan(','atan('],log:['log(','10^('],ln:['ln(','exp('],inv:['1/','fact('],pi:['π','2π'],e_const:['e','φ'],abs:['abs(','sgn(']};
+function doFn(name){if(justCalc)justCalc=false;appendToFocus(fnMap[name][shiftOn?1:0]);if(shiftOn)clearShift();}
+
+/* ── CURSOR ── */
+function getDefFocus(idx,side){
+  let t=tokens[idx];
+  if(t.type==='frac')return side==='end'?'den':'num';
+  if(t.type==='sqrt')return'arg';
+  if(t.type==='nthroot')return side==='end'?'arg':'deg';
+  if(t.type==='pow')return side==='end'?'exp':'base';
+  return null;
+}
+function moveCursor(dir){
+  let tok=tokens[cursor];
+  if(dir==='up'){if(tok&&tok.type==='frac')fracFocus='num';else if(tok&&tok.type==='mixed')fracFocus='num';else if(tok&&tok.type==='pow')fracFocus='exp';}
+  else if(dir==='down'){if(tok&&(tok.type==='frac'||tok.type==='mixed'))fracFocus='den';}
+  else if(dir==='left'){
+    if(tok&&tok.type==='frac'){if(fracFocus==='den')fracFocus='num';else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}}
+    else if(tok&&tok.type==='mixed'){
+      if(fracFocus==='den')fracFocus='num';
+      else if(fracFocus==='num')fracFocus='whole';
+      else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}
+    }
+    else if(tok&&tok.type==='log'){
+      if(fracFocus==='arg')fracFocus='base';
+      else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}
+    }
+    else if(tok&&(tok.type==='sqrt'||tok.type==='nthroot')){if(tok.type==='nthroot'&&fracFocus==='arg'){fracFocus='deg';}else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}}
+    else if(tok&&tok.type==='pow'){if(fracFocus==='exp')fracFocus='base';else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}}
+    else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}
+  }
+  else if(dir==='right'){
+    if(tok&&tok.type==='frac'){if(fracFocus==='num')fracFocus='den';else if(cursor<tokens.length-1){cursor++;fracFocus=getDefFocus(cursor,'start');}}
+    else if(tok&&tok.type==='mixed'){
+      if(fracFocus==='whole')fracFocus='num';
+      else if(fracFocus==='num')fracFocus='den';
+      else if(cursor<tokens.length-1){cursor++;fracFocus=getDefFocus(cursor,'start');}
+    }
+    else if(tok&&tok.type==='log'){
+      if(fracFocus==='base')fracFocus='arg';
+      else if(cursor<tokens.length-1){cursor++;fracFocus=getDefFocus(cursor,'start');}
+    }
+    else if(tok&&(tok.type==='sqrt'||tok.type==='nthroot')){
+      if(tok.type==='nthroot'&&fracFocus==='deg'){fracFocus='arg';}
+      else if(cursor<tokens.length-1){cursor++;fracFocus=getDefFocus(cursor,'start');}
+    }
+    else if(tok&&tok.type==='pow'){if(fracFocus==='base')fracFocus='exp';else if(cursor<tokens.length-1){cursor++;fracFocus=getDefFocus(cursor,'start');}}
+    else if(cursor<tokens.length-1){cursor++;fracFocus=getDefFocus(cursor,'start');}
+  }
+  renderDisplay();
+}
+
+/* ── BACKSPACE ── */
+function backspace(){
+  if(justCalc){resetCalc();return;}
+  let tok=tokens[cursor];
+  if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus){
+    if(tok[fracFocus].length>0){tok[fracFocus]=tok[fracFocus].slice(0,-1);}
+    else{
+      let pi=cursor-1,ni=cursor+1;
+      let pv=(pi>=0&&tokens[pi].type==='text')?tokens[pi].val:null;
+      let nv=(ni<tokens.length&&tokens[ni].type==='text')?tokens[ni].val:null;
+      let merged=(pv??'')+(nv??'');
+      let ss=pv!==null?pi:cursor,sc=1+(pv!==null?1:0)+(nv!==null?1:0);
+      tokens.splice(ss,sc,{type:'text',val:merged});cursor=ss;fracFocus=null;
+    }
+  } else {
+    let t=curText();if(t&&t.val.length>0)t.val=t.val.slice(0,-1);
+    else if(cursor>0){cursor--;fracFocus=getDefFocus(cursor,'end');}
+  }
+  renderDisplay();
+}
+function clearEntry(){let tok=tokens[cursor];if(tok&&SLOT_TYPES.includes(tok.type)&&fracFocus)tok[fracFocus]='';else{let t=curText();if(t)t.val='';}renderDisplay();}
+function clearAll(){tokens=[{type:'text',val:''}];cursor=0;fracFocus=null;justCalc=false;rawResult=null;document.getElementById('dispExpr').textContent='';renderDisplay();}
+function resetCalc(){tokens=[{type:'text',val:''}];cursor=0;fracFocus=null;justCalc=false;}
+
+/* ── PRETTY DISPLAY ── */
+// Converts raw stored string to HTML for display
+// ^ followed by non-operator chars becomes a raised superscript
+function prettyVal(str){
+  let s=str.replace(/\*/g,'×').replace(/\/(?!\/)/g,'÷').replace(/-/g,'−');
+  // asin/acos/atan → sin⁻¹/cos⁻¹/tan⁻¹
+  const sup1='<span style="display:inline-block;font-size:.52em;font-family:\'DM Mono\',monospace;position:relative;top:-0.55em;line-height:1">−1</span>';
+  s=s.replace(/asin\(/g,'sin'+sup1+'(').replace(/acos\(/g,'cos'+sup1+'(').replace(/atan\(/g,'tan'+sup1+'(');
+  // ^exp → raised superscript (works in flex via position:relative)
+  s=s.replace(/\^([-−]?[^+×÷\^()\s]+)/g,
+    (_,exp)=>`<span style="display:inline-block;font-size:.52em;font-family:'DM Mono',monospace;position:relative;top:-0.55em;line-height:1">${exp}</span>`);
+  // lone ^ at end (no exponent typed yet) → raised empty box
+  s=s.replace(/\^$/,
+    `<span style="display:inline-block;font-size:.52em;font-family:'DM Mono',monospace;position:relative;top:-0.55em;line-height:1;opacity:.4">□</span>`);
+  return s;
+}
+
+/* ── RENDER DISPLAY ── */
+function mkCursor(){let c=document.createElement('span');c.className='slot-cursor';return c;}
+
+function renderDisplay(){
+  const c=document.getElementById('dispRender');c.innerHTML='';
+  tokens.forEach((tok,idx)=>{
+    const isCur=idx===cursor;
+    if(tok.type==='text'){
+      if(tok.val===''&&!(isCur&&fracFocus===null))return;
+      let s=document.createElement('span');
+      s.className='token'+(isCur&&fracFocus===null?' cursor-after':'');
+      let v=tok.val;
+      if(/^[+\-×÷\/%^]+$/.test(v))s.classList.add('op');
+      else if(/[a-zA-Zπφ]/.test(v))s.classList.add('fn');
+      s.innerHTML=prettyVal(v);
+      c.appendChild(s);
+
+    } else if(tok.type==='frac'){
+      let w=document.createElement('span');w.className='token frac';
+      // numerator slot
+      let ns=document.createElement('div');
+      ns.className='frac-slot'+(isCur&&fracFocus==='num'?' active':'')+(tok.num?'':' empty');
+      if(tok.num)ns.innerHTML=prettyVal(tok.num);
+      if(isCur&&fracFocus==='num')ns.appendChild(mkCursor());
+      ns.onclick=()=>{cursor=idx;fracFocus='num';renderDisplay();};
+      // bar — width based on content length
+      let bar=document.createElement('div');bar.className='frac-bar';
+      bar.style.minWidth=Math.max((tok.num||'').length,(tok.den||'').length,2)*11+'px';
+      // denominator slot
+      let ds=document.createElement('div');
+      ds.className='frac-slot'+(isCur&&fracFocus==='den'?' active':'')+(tok.den?'':' empty');
+      if(tok.den)ds.innerHTML=prettyVal(tok.den);
+      if(isCur&&fracFocus==='den')ds.appendChild(mkCursor());
+      ds.onclick=()=>{cursor=idx;fracFocus='den';renderDisplay();};
+      w.appendChild(ns);w.appendChild(bar);w.appendChild(ds);
+      if(isCur&&fracFocus===null)w.classList.add('cursor-after');
+      c.appendChild(w);
+
+    } else if(tok.type==='sqrt'){
+      let w=document.createElement('span');w.className='token sqrt-tok';
+      let STROKE=isCur&&fracFocus==='arg'?'var(--green)':'#1a2e22';
+      let _s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      _s.setAttribute('viewBox','0 0 20 60');_s.setAttribute('preserveAspectRatio','none');
+      _s.setAttribute('fill','none');
+      _s.style.cssText='position:absolute;left:34px;top:0;bottom:0;width:20px;height:100%;overflow:visible;pointer-events:none;';
+      let _p=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+      _p.setAttribute('points','1,42 4,42 8,58 20,1.5');
+      _p.setAttribute('stroke',STROKE);_p.setAttribute('stroke-width','3');
+      _p.setAttribute('stroke-linejoin','round');_p.setAttribute('stroke-linecap','square');
+      _s.appendChild(_p);
+      let box=document.createElement('span');
+      box.className='rad-content'+(isCur&&fracFocus==='arg'?' active-slot':'');
+      if(tok.arg)box.innerHTML=prettyVal(tok.arg);
+      else{let ph=document.createElement('span');ph.className='slot-empty';box.appendChild(ph);}
+      if(isCur&&fracFocus==='arg')box.appendChild(mkCursor());
+      box.onclick=()=>{cursor=idx;fracFocus='arg';renderDisplay();};
+      w.appendChild(_s);w.appendChild(box);
+      if(isCur&&fracFocus===null)w.classList.add('cursor-after');
+      c.appendChild(w);
+
+    } else if(tok.type==='nthroot'){
+      let w=document.createElement('span');w.className='token nthroot-tok';
+      let deg=document.createElement('span');
+      deg.className='nthroot-deg'+(isCur&&fracFocus==='deg'?' active-slot':'');
+      if(tok.deg)deg.innerHTML=prettyVal(tok.deg);
+      else{let ph=document.createElement('span');ph.className='slot-empty';ph.style.fontSize='10px';deg.appendChild(ph);}
+      if(isCur&&fracFocus==='deg')deg.appendChild(mkCursor());
+      deg.onclick=()=>{cursor=idx;fracFocus='deg';renderDisplay();};
+      let STROKE2=isCur&&fracFocus==='arg'?'var(--green)':'#1a2e22';
+      let _s2=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      _s2.setAttribute('viewBox','0 0 20 60');_s2.setAttribute('preserveAspectRatio','none');
+      _s2.setAttribute('fill','none');
+      _s2.style.cssText='position:absolute;left:34px;top:0;bottom:0;width:20px;height:100%;overflow:visible;pointer-events:none;';
+      let _p2=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+      _p2.setAttribute('points','1,42 4,42 8,58 20,1.5');
+      _p2.setAttribute('stroke',STROKE2);_p2.setAttribute('stroke-width','3');
+      _p2.setAttribute('stroke-linejoin','round');_p2.setAttribute('stroke-linecap','square');
+      _s2.appendChild(_p2);
+      let box=document.createElement('span');
+      box.className='rad-content'+(isCur&&fracFocus==='arg'?' active-slot':'');
+      if(tok.arg)box.innerHTML=prettyVal(tok.arg);
+      else{let ph=document.createElement('span');ph.className='slot-empty';box.appendChild(ph);}
+      if(isCur&&fracFocus==='arg')box.appendChild(mkCursor());
+      box.onclick=()=>{cursor=idx;fracFocus='arg';renderDisplay();};
+      w.appendChild(deg);w.appendChild(_s2);w.appendChild(box);
+      if(isCur&&fracFocus===null)w.classList.add('cursor-after');
+      c.appendChild(w);
+
+    } else if(tok.type==='mixed'){
+      let w=document.createElement('span');w.className='token mixed-tok';
+      let isCur=idx===cursor;
+      // Whole number slot
+      let whole=document.createElement('span');
+      whole.className='mixed-whole'+(isCur&&fracFocus==='whole'?' active-slot':'');
+      if(tok.whole)whole.innerHTML=prettyVal(tok.whole);
+      else{let ph=document.createElement('span');ph.className='slot-empty';whole.appendChild(ph);}
+      if(isCur&&fracFocus==='whole')whole.appendChild(mkCursor());
+      whole.onclick=()=>{cursor=idx;fracFocus='whole';renderDisplay();};
+      // Fraction part
+      let fracPart=document.createElement('span');fracPart.className='mixed-frac-part';
+      let numS=document.createElement('span');
+      numS.className='frac-slot'+(isCur&&fracFocus==='num'?' active-slot':'');
+      if(tok.num)numS.innerHTML=prettyVal(tok.num);
+      else{let ph=document.createElement('span');ph.className='slot-empty';numS.appendChild(ph);}
+      if(isCur&&fracFocus==='num')numS.appendChild(mkCursor());
+      numS.onclick=()=>{cursor=idx;fracFocus='num';renderDisplay();};
+      let bar=document.createElement('div');bar.className='frac-bar';
+      let denS=document.createElement('span');
+      denS.className='frac-slot'+(isCur&&fracFocus==='den'?' active-slot':'');
+      if(tok.den)denS.innerHTML=prettyVal(tok.den);
+      else{let ph=document.createElement('span');ph.className='slot-empty';denS.appendChild(ph);}
+      if(isCur&&fracFocus==='den')denS.appendChild(mkCursor());
+      denS.onclick=()=>{cursor=idx;fracFocus='den';renderDisplay();};
+      fracPart.appendChild(numS);fracPart.appendChild(bar);fracPart.appendChild(denS);
+      w.appendChild(whole);w.appendChild(fracPart);
+      if(isCur&&fracFocus===null)w.classList.add('cursor-after');
+      c.appendChild(w);
+
+    } else if(tok.type==='log'){
+      let w=document.createElement('span');w.className='token log-tok';
+      let isCur=idx===cursor;
+      // "log" + base side by side, base sits at baseline (subscript via align-items:flex-end)
+      let lblWrap=document.createElement('span');lblWrap.className='log-label-wrap';
+      let lbl=document.createElement('span');lbl.className='log-label';lbl.textContent='log';
+      let baseS=document.createElement('span');
+      baseS.className='log-base'+(isCur&&fracFocus==='base'?' active-slot':'');
+      if(tok.base)baseS.innerHTML=prettyVal(tok.base);
+      else{let ph=document.createElement('span');ph.className='slot-empty';ph.style.fontSize='12px';baseS.appendChild(ph);}
+      if(isCur&&fracFocus==='base')baseS.appendChild(mkCursor());
+      baseS.onclick=()=>{cursor=idx;fracFocus='base';renderDisplay();};
+      lblWrap.appendChild(lbl);lblWrap.appendChild(baseS);
+      // argument slot
+      let argS=document.createElement('span');
+      argS.className='log-arg'+(isCur&&fracFocus==='arg'?' active-slot':'');
+      if(tok.arg)argS.innerHTML=prettyVal(tok.arg);
+      else{let ph=document.createElement('span');ph.className='slot-empty';argS.appendChild(ph);}
+      if(isCur&&fracFocus==='arg')argS.appendChild(mkCursor());
+      argS.onclick=()=>{cursor=idx;fracFocus='arg';renderDisplay();};
+      w.appendChild(lblWrap);w.appendChild(argS);
+      if(isCur&&fracFocus===null)w.classList.add('cursor-after');
+      c.appendChild(w);
+
+    } else if(tok.type==='pow'){
+      let w=document.createElement('span');w.className='token pow-tok';
+      // base (big, lower)
+      let base=document.createElement('span');
+      base.className='pow-base'+(isCur&&fracFocus==='base'?' active-slot':'');
+      if(tok.base)base.innerHTML=prettyVal(tok.base);
+      else{let ph=document.createElement('span');ph.className='slot-empty';base.appendChild(ph);}
+      if(isCur&&fracFocus==='base')base.appendChild(mkCursor());
+      base.onclick=()=>{cursor=idx;fracFocus='base';renderDisplay();};
+      // exp (small, upper-right via margin-bottom on exp)
+      let exp=document.createElement('span');
+      exp.className='pow-exp'+(isCur&&fracFocus==='exp'?' active-slot':'');
+      if(tok.exp)exp.innerHTML=prettyVal(tok.exp);
+      else{let ph=document.createElement('span');ph.className='slot-empty';exp.appendChild(ph);}
+      if(isCur&&fracFocus==='exp')exp.appendChild(mkCursor());
+      exp.onclick=()=>{cursor=idx;fracFocus='exp';renderDisplay();};
+      w.appendChild(base);w.appendChild(exp);
+      if(isCur&&fracFocus===null)w.classList.add('cursor-after');
+      c.appendChild(w);
+    }
+  });
+  if(c.innerHTML===''){let s=document.createElement('span');s.className='token cursor-after';s.textContent='';c.appendChild(s);}
+}
+
+function cleanSlot(s){
+  if(!s)return'';
+  return s.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-')
+    .replace(/\^(.+)/g,'**($1)');
+}
+function buildDisplayExpr(){
+  return tokens.map(t=>{
+    if(t.type==='text') return t.val;
+    if(t.type==='frac') return`(${t.num||'0'})/(${t.den||'1'})`;
+    if(t.type==='sqrt') return`√(${t.arg||'0'})`;
+    if(t.type==='nthroot') return`${t.deg||'n'}√(${t.arg||'0'})`;
+    if(t.type==='pow') return`(${t.base||'0'})^(${t.exp||'1'})`;
+    if(t.type==='log') return`log_${t.base||'10'}(${t.arg||'0'})`;
+    if(t.type==='mixed') return`${t.whole||'0'} ${t.num||'0'}/${t.den||'1'}`;
+    return'';
+  }).join('');
+}
+function buildExpr(){
+  return tokens.map(t=>{
+    if(t.type==='text')return t.val.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+    if(t.type==='frac')return`((${cleanSlot(t.num)||'0'})/(${cleanSlot(t.den)||'1'}))`;
+    if(t.type==='sqrt')return`sqrt(${cleanSlot(t.arg)||'0'})`;
+    if(t.type==='nthroot'){let d=cleanSlot(t.deg)||'2',a=cleanSlot(t.arg)||'0';return`Math.pow(${a},1/(${d}))`;}
+    if(t.type==='pow')return`((${cleanSlot(t.base)||'0'})**(${cleanSlot(t.exp)||'1'}))`;
+    if(t.type==='log'){let b=cleanSlot(t.base)||'10',a=cleanSlot(t.arg)||'0';if(!a||a==='0')return'0';return`(Math.log(Number(${a}))/Math.log(Number(${b})))`;}
+    if(t.type==='mixed'){let w=cleanSlot(t.whole)||'0',n=cleanSlot(t.num)||'0',d=cleanSlot(t.den)||'1';return`((${w})+(${n})/(${d}))`;}
+    return'';
+  }).join('');
+}
+
+/* ── CALCULATE ── */
+function fact(n){n=Math.round(n);if(n<0||n>170)return n<0?NaN:Infinity;let r=1;for(let i=2;i<=n;i++)r*=i;return r;}
+function nCr(n,r){return fact(n)/(fact(r)*fact(n-r));}
+
+function calculate(){
+  let raw=buildExpr();if(!raw.trim())return;
+  // Strip °′″ symbols — treat as decorative (75° just means 75)
+  // But convert D°M′S″ pattern to decimal first
+  let js=raw.replace(/(-?\d+(?:\.\d+)?)°(\d+(?:\.\d+)?)′(\d+(?:\.\d+)?)″/g,(_,d,m,s)=>{
+    let dec=(parseFloat(d)<0?-1:1)*(Math.abs(parseFloat(d))+parseFloat(m)/60+parseFloat(s)/3600);
+    return String(dec);
+  }).replace(/°/g,'').replace(/′/g,'').replace(/″/g,'')
+    .replace(/π/g,'Math.PI').replace(/φ/g,'1.6180339887').replace(/\be\b/g,'Math.E').replace(/\^/g,'**')
+    .replace(/\bsin\(/g,mode==='deg'?'_sinD(':'Math.sin(').replace(/\bcos\(/g,mode==='deg'?'_cosD(':'Math.cos(').replace(/\btan\(/g,mode==='deg'?'_tanD(':'Math.tan(')
+    .replace(/\basin\(/g,mode==='deg'?'_asinD(':'Math.asin(').replace(/\bacos\(/g,mode==='deg'?'_acosD(':'Math.acos(').replace(/\batan\(/g,mode==='deg'?'_atanD(':'Math.atan(')
+    .replace(/(?<!Math\.)(?<!\.)log\(/g,'Math.log10(').replace(/\bln\(/g,'Math.log(').replace(/\bexp\(/g,'Math.exp(').replace(/10\*\*\(/g,'_pow10(')
+    .replace(/\bsqrt\(/g,'Math.sqrt(').replace(/\bcbrt\(/g,'Math.cbrt(')
+    .replace(/\babs\(/g,'Math.abs(').replace(/\bsgn\(/g,'Math.sign(').replace(/\bfact\(/g,'_fact(').replace(/\bnCr\(/g,'_nCr(');
+  try{
+    const _sinD=x=>Math.sin(x*Math.PI/180),_cosD=x=>Math.cos(x*Math.PI/180),_tanD=x=>Math.tan(x*Math.PI/180);
+    const _asinD=x=>Math.asin(x)*180/Math.PI,_acosD=x=>Math.acos(x)*180/Math.PI,_atanD=x=>Math.atan(x)*180/Math.PI;
+    const _fact=fact,_nCr=nCr,_pow10=x=>Math.pow(10,x);
+    const result=Function('_sinD','_cosD','_tanD','_asinD','_acosD','_atanD','_fact','_nCr','_pow10','"use strict";return ('+js+');')
+      (_sinD,_cosD,_tanD,_asinD,_acosD,_atanD,_fact,_nCr,_pow10);
+    if(result===undefined||result===null||typeof result!=='number')throw new Error();
+    rawResult=result;
+    let hasDeg=raw.includes('°');
+    let formatted=formatResult(result)+(hasDeg?'°':'');
+    let displayExpr=buildDisplayExpr();
+    document.getElementById('dispExpr').textContent=displayExpr+' =';
+    addToHistory(displayExpr,formatted);
+    tokens=makeResultTokens(formatted);cursor=0;fracFocus=null;justCalc=true;
+    renderDisplay();
+  }catch(e){
+    document.getElementById('dispExpr').textContent='';
+    tokens=[{type:'text',val:'SYNTAX ERR'}];cursor=0;fracFocus=null;justCalc=false;
+    renderDisplay();
+  }
+}
+
+/* ── HISTORY ── */
+function addToHistory(expr,result){calcHistory.unshift({expr,result,time:new Date().toLocaleTimeString()});renderHistory();}
+function renderHistory(){
+  const list=document.getElementById('historyList'),empty=document.getElementById('historyEmpty');
+  if(!calcHistory.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  list.querySelectorAll('.history-item').forEach(el=>el.remove());
+  calcHistory.forEach(item=>{
+    let div=document.createElement('div');div.className='history-item';
+    div.innerHTML=`<div class="history-left"><div class="history-expr">${item.expr} =</div><div class="history-time">${item.time}</div></div><div class="history-result">${item.result}</div><span class="history-recall">↵</span>`;
+    div.onclick=()=>{resetCalc();tokens=[{type:'text',val:item.result}];justCalc=true;rawResult=parseFloat(item.result);document.getElementById('dispExpr').textContent='';renderDisplay();};
+    list.appendChild(div);
+  });
+}
+function toggleHistory(){
+  document.getElementById('historyPanel').classList.toggle('collapsed');
+}
+function toggleSidebar(){
+  const device=document.querySelector('.device');
+  const collapsed=device.classList.toggle('sidebar-collapsed');
+  document.getElementById('sidebarChevron').style.transform=collapsed?'rotate(0deg)':'rotate(180deg)';
+}
+
+function clearHistory(){calcHistory=[];renderHistory();document.getElementById('historyEmpty').style.display='block';}
+
+/* ══ STATISTICS 1-VAR ══ */
+let chart1=null;
+function calcStats1(){
+  let nums=document.getElementById('statsInput1').value.split(/[\s,\n]+/).map(Number).filter(n=>!isNaN(n)&&String(n)!=='');
+  if(!nums.length)return;
+  nums.sort((a,b)=>a-b);
+  document.getElementById('statsSorted1').textContent=nums.join(', ');
+  let n=nums.length,sum=nums.reduce((a,b)=>a+b,0),mean=sum/n;
+  let med=n%2===0?(nums[n/2-1]+nums[n/2])/2:nums[Math.floor(n/2)];
+  let freq={};nums.forEach(x=>{freq[x]=(freq[x]||0)+1;});
+  let maxF=Math.max(...Object.values(freq));
+  let modes=Object.keys(freq).filter(k=>freq[k]===maxF).map(Number);
+  let popVar=nums.reduce((a,x)=>a+(x-mean)**2,0)/n;
+  let sampVar=n>1?nums.reduce((a,x)=>a+(x-mean)**2,0)/(n-1):0;
+  let sumx2=nums.reduce((a,x)=>a+x*x,0);
+  let f=v=>parseFloat(v.toPrecision(6)).toString();
+  document.getElementById('s1-n').textContent=n;
+  document.getElementById('s1-sum').textContent=f(sum);
+  document.getElementById('s1-mean').textContent=f(mean);
+  document.getElementById('s1-med').textContent=f(med);
+  document.getElementById('s1-mode').textContent=modes.length>3?modes.slice(0,3).join(', ')+'…':modes.join(', ');
+  document.getElementById('s1-range').textContent=f(nums[n-1]-nums[0]);
+  document.getElementById('s1-popsd').textContent=f(Math.sqrt(popVar));
+  document.getElementById('s1-sampsd').textContent=n>1?f(Math.sqrt(sampVar)):'N/A';
+  document.getElementById('s1-sumx2').textContent=f(sumx2);
+  document.getElementById('s1-minmax').textContent=`${nums[0]} / ${nums[n-1]}`;
+  if(chart1)chart1.destroy();
+  chart1=new Chart(document.getElementById('statsChart1').getContext('2d'),{type:'bar',data:{labels:nums.map(String),datasets:[{data:nums,backgroundColor:'rgba(46,125,82,.6)',borderColor:'#2e7d52',borderWidth:1,borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
+}
+
+/* ══ STATISTICS 2-VAR ══ */
+let chart2=null,twoVarRows=[];
+function addTwoVarRow(){
+  const tbody=document.getElementById('twovarBody');
+  const idx=twoVarRows.length;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="color:var(--text-light);font-size:11px;padding:4px 8px;font-family:'DM Mono',monospace">${idx+1}</td><td><input type="number" placeholder="x" id="tvx${idx}"></td><td><input type="number" placeholder="y" id="tvy${idx}"></td>`;
+  tbody.appendChild(tr);twoVarRows.push(idx);
+}
+function calcStats2(){
+  let xs=[],ys=[];
+  twoVarRows.forEach(i=>{
+    let x=parseFloat(document.getElementById('tvx'+i).value),y=parseFloat(document.getElementById('tvy'+i).value);
+    if(!isNaN(x)&&!isNaN(y)){xs.push(x);ys.push(y);}
+  });
+  if(xs.length<2)return;
+  let n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let sdx=Math.sqrt(xs.reduce((a,x)=>a+(x-mx)**2,0)/n);
+  let sdy=Math.sqrt(ys.reduce((a,y)=>a+(y-my)**2,0)/n);
+  let cov=xs.reduce((a,x,i)=>a+(x-mx)*(ys[i]-my),0)/n;
+  let r=sdx&&sdy?cov/(sdx*sdy):0,a=sdx?cov/(sdx*sdx):0,b=my-a*mx;
+  let f=v=>parseFloat(v.toPrecision(5)).toString();
+  document.getElementById('s2-n').textContent=n;
+  document.getElementById('s2-meanx').textContent=f(mx);
+  document.getElementById('s2-meany').textContent=f(my);
+  document.getElementById('s2-sdx').textContent=f(sdx);
+  document.getElementById('s2-sdy').textContent=f(sdy);
+  document.getElementById('s2-r').textContent=f(r);
+  document.getElementById('s2-a').textContent=f(a);
+  document.getElementById('s2-b').textContent=f(b);
+  document.getElementById('s2-line').textContent=`ŷ = ${f(a)}x + ${f(b)}`;
+  if(chart2)chart2.destroy();
+  let minX=Math.min(...xs),maxX=Math.max(...xs);
+  chart2=new Chart(document.getElementById('statsChart2').getContext('2d'),{data:{datasets:[
+    {type:'scatter',label:'Data',data:xs.map((x,i)=>({x,y:ys[i]})),backgroundColor:'rgba(46,125,82,.7)',pointRadius:5},
+    {type:'line',label:`ŷ=${f(a)}x+${f(b)}`,data:[{x:minX,y:a*minX+b},{x:maxX,y:a*maxX+b}],borderColor:'#d4732a',borderWidth:2,pointRadius:0,tension:0}
+  ]},options:{responsive:true,scales:{x:{type:'linear',ticks:{font:{size:9}}},y:{type:'linear',ticks:{font:{size:9}}}},plugins:{legend:{labels:{font:{size:10}}}}}});
+}
+
+/* ══ KEYBOARD ══ */
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('module-calculator').classList.contains('active'))return;
+  const tag=document.activeElement.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+  if(e.key>='0'&&e.key<='9'){e.preventDefault();inputNum(e.key);}
+  else if(e.key==='.'){e.preventDefault();inputDot();}
+  else if(e.key==='+'){e.preventDefault();insertText('+');}
+  else if(e.key==='-'){e.preventDefault();insertText('-');}
+  else if(e.key==='*'){e.preventDefault();insertMul();}
+  else if(e.key==='/'){e.preventDefault();insertDiv();}
+  else if(e.key==='%'){e.preventDefault();insertText('%');}
+  else if(e.key==='('){e.preventDefault();insertText('(');}
+  else if(e.key===')'){e.preventDefault();insertText(')');}
+  else if(e.key==='Enter'||e.key==='='){e.preventDefault();calculate();}
+  else if(e.key==='Backspace'){e.preventDefault();backspace();}
+  else if(e.key==='Escape'){e.preventDefault();clearAll();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();moveCursor('left');}
+  else if(e.key==='ArrowRight'){e.preventDefault();moveCursor('right');}
+  else if(e.key==='ArrowUp'){e.preventDefault();moveCursor('up');}
+  else if(e.key==='ArrowDown'){e.preventDefault();moveCursor('down');}
+});
+
+/* ══ INIT ══ */
+for(let i=0;i<6;i++)addTwoVarRow();
+updateShiftLabels();
+document.getElementById('roundDpInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.stopPropagation();applyRound();}});
+document.getElementById('fnEvalInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.stopPropagation();evalFn();}});
+
+renderDisplay();
+
+/* ── f(x)/g(x) MENU ── */
+let fnExprBuf=''; // buffer for define mode
+let fnEvalBuf=''; // buffer for eval x input
+function fnEvalPad(ch){
+  fnEvalBuf+=ch;
+  document.getElementById('fnEvalInput').value=fnEvalBuf;
+}
+function fnEvalPadDel(){
+  fnEvalBuf=fnEvalBuf.slice(0,-1);
+  document.getElementById('fnEvalInput').value=fnEvalBuf;
+}
+function fnPad(ch){
+  fnExprBuf+=ch;
+  document.getElementById('fnDefDisplay').textContent=fnExprBuf||'';
+}
+function fnPadDel(){
+  fnExprBuf=fnExprBuf.slice(0,-1);
+  document.getElementById('fnDefDisplay').textContent=fnExprBuf||'';
+}
+function fnPadClick(e,ch){
+  e.stopPropagation();
+  fnPad(ch);
+}
+function fnPadDelClick(e){
+  e.stopPropagation();
+  fnPadDel();
+}
+let fnDefs={f:'',g:''};
+let fnMenuMode=null; // 'def-f','def-g','eval-f','eval-g','eval-fg','eval-gf'
+function openFnMenu(){
+  document.getElementById('fnMenuOverlay').classList.add('open');
+  updateFnDefsDisplay();
+}
+function closeFnMenu(){
+  document.getElementById('fnMenuOverlay').classList.remove('open');
+  fnMenuMode=null;
+  ['fnDefFx','fnDefGx','fnEvalFx','fnEvalGx','fnEvalFG','fnEvalGF'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('fnDefRow').style.display='none';
+  document.getElementById('fnEvalRow').style.display='none';
+}
+function selectFnDef(fn){
+  fnMenuMode='def-'+fn;
+  document.getElementById('fnDefFx').classList.toggle('active',fn==='f');
+  document.getElementById('fnDefGx').classList.toggle('active',fn==='g');
+  ['fnEvalFx','fnEvalGx','fnEvalFG','fnEvalGF'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('fnEvalRow').style.display='none';
+  document.getElementById('fnDefLabel').textContent=(fn==='f'?'f':'g')+'(x) =';
+  fnExprBuf=fnDefs[fn]||'';
+  document.getElementById('fnDefDisplay').textContent=fnExprBuf;
+  document.getElementById('fnDefRow').style.display='block';
+}
+function saveFnDef(){
+  if(!fnMenuMode||!fnMenuMode.startsWith('def-'))return;
+  let fn=fnMenuMode.slice(4);
+  fnDefs[fn]=fnExprBuf.trim();
+  updateFnDefsDisplay();
+  document.getElementById('fnDefRow').style.display='none';
+  document.getElementById(fn==='f'?'fnDefFx':'fnDefGx').classList.remove('active');
+  fnMenuMode=null;
+}
+function selectFnEval(type){
+  fnMenuMode='eval-'+type;
+  ['fnEvalFx','fnEvalGx','fnEvalFG','fnEvalGF'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  const idMap={f:'fnEvalFx',g:'fnEvalGx',fg:'fnEvalFG',gf:'fnEvalGF'};
+  if(idMap[type]) document.getElementById(idMap[type]).classList.add('active');
+  ['fnDefFx','fnDefGx'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('fnDefRow').style.display='none';
+  let labels={f:'f(x): x =',g:'g(x): x =',fg:'f(g(x)): x =',gf:'g(f(x)): x ='};
+  document.getElementById('fnEvalLabel').textContent=labels[type]||'x =';
+  document.getElementById('fnEvalRow').style.display='flex';
+  fnEvalBuf='';
+  document.getElementById('fnEvalInput').value='';
+  document.getElementById('fnEvalResult').style.display='none';
+  document.getElementById('fnEvalInput').focus();
+}
+function fnMathEval(expr, x){
+  let s = expr
+    .replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-')
+    .replace(/\^/g,'**')
+    .replace(/π/g,'Math.PI')
+    .replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(').replace(/tan\(/g,'Math.tan(')
+    .replace(/sqrt\(/g,'Math.sqrt(').replace(/abs\(/g,'Math.abs(')
+    .replace(/ln\(/g,'Math.log(').replace(/log\(/g,'Math.log10(')
+    .replace(/(\d)([a-zA-Z])/g,'$1*$2')
+    .replace(/(?<![a-zA-Z.])e(?![a-zA-Z.(])/g,'Math.E')
+    .replace(/\bx\b/g, String(x));
+  return Function('"use strict";return ('+s+')')();
+}
+function evalFn(){
+  let raw = document.getElementById('fnEvalInput').value.trim();
+  if(!raw){alert('Enter a value for x');return;}
+  let xVal = parseFloat(raw);
+  if(isNaN(xVal)){alert('x must be a number');return;}
+  let type = fnMenuMode ? fnMenuMode.slice(5) : 'f';
+  if((type==='f'||type==='fg'||type==='gf')&&!fnDefs.f){alert('Please define f(x) first.');return;}
+  if((type==='g'||type==='fg'||type==='gf')&&!fnDefs.g){alert('Please define g(x) first.');return;}
+  try{
+    let result;
+    if(type==='f')       result = fnMathEval(fnDefs.f, xVal);
+    else if(type==='g')  result = fnMathEval(fnDefs.g, xVal);
+    else if(type==='fg') result = fnMathEval(fnDefs.f, fnMathEval(fnDefs.g, xVal));
+    else if(type==='gf') result = fnMathEval(fnDefs.g, fnMathEval(fnDefs.f, xVal));
+    let labels={f:`f(${xVal})`,g:`g(${xVal})`,fg:`f(g(${xVal}))`,gf:`g(f(${xVal}))`};
+    let resultEl = document.getElementById('fnEvalResult');
+    resultEl.textContent = labels[type]+' = '+result;
+    resultEl.style.display = 'block';
+    rawResult = result;
+    document.getElementById('dispExpr').textContent = labels[type]+' =';
+    tokens = makeResultTokens(formatResult(result));
+    cursor=0; fracFocus=null; justCalc=true;
+    renderDisplay();
+  } catch(err){ alert('Error: '+err.message); }
+}
+function updateFnDefsDisplay(){
+  let parts=[];
+  if(fnDefs.f)parts.push('f(x) = '+fnDefs.f);
+  if(fnDefs.g)parts.push('g(x) = '+fnDefs.g);
+  document.getElementById('fnDefsText').textContent=parts.length?parts.join('   |   '):'None defined';
+}
+</script>
+  <button onclick="toggleSidebar()" id="sidebarToggleBtn"
+    title="Toggle History"
+    style="position:fixed;top:50%;transform:translateY(-50%);
+      right:calc(50% - 271px);
+      width:22px;height:48px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-right:none;
+      border-radius:8px 0 0 8px;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:-2px 0 8px rgba(46,125,82,.12);
+      padding:0;z-index:100;
+      transition:background .15s;">
+    <span id="sidebarChevron" style="font-size:11px;color:var(--green);transition:transform .3s ease;">▶</span>
+  </button>
+</body>
+</html>
