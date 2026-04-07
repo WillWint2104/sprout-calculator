@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sprout Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/calculator.css" />
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/statistics.css" />
+</head>
+<body>
+<div class="app-shell">
+  <div class="device" id="device">
+
+    <!-- HEADER -->
+    <header class="device-header">
+      <div class="logo-lockup">
+        <div class="logo-circle">
+          <img src="./assets/img/logo.png" alt="Sprout" style="width:34px;height:34px;object-fit:contain;">
+        </div>
+        <div>
+          <div class="brand-name">Sprout Calculator</div>
+          <div class="brand-sub">by Homegrown Learning</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="device-content">
+
+      <!-- ══ CALCULATOR MODULE ══ -->
+      <section id="module-calculator" class="module active">
+        <div class="calc-layout" id="calcLayout">
+          <div class="calc-app" id="calcApp">
+
+            <!-- SCREEN -->
+            <div class="screen-wrap">
+              <div class="screen-module-row">
+                <button class="screen-mod-btn active" id="smb-calculator" data-module="calculator">
+                  <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="8" height="3" rx="1" fill="currentColor" opacity=".6"/><line x1="3" y1="8.5" x2="5.5" y2="8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="8.5" y1="8.5" x2="11" y2="8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  Calculate
+                </button>
+                <button class="screen-mod-btn" id="smb-statistics" data-module="statistics">
+                  <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="4" width="3" height="9" rx="1" fill="currentColor" opacity=".75"/><rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor"/></svg>
+                  Statistics
+                </button>
+                <span id="shiftInd">SHIFT</span>
+                <span id="ansInd">ANS</span>
+              </div>
+              <div class="screen-top-row">
+                <button class="mode-btn active" id="btnDeg" data-mode="deg">DEG</button>
+                <button class="mode-btn" id="btnRad" data-mode="rad">RAD</button>
+                <button class="mode-btn" id="btnAns" data-action="ans">ANS</button>
+              </div>
+              <div class="disp-expr" id="dispExpr"></div>
+              <div class="disp-render" id="dispRender"></div>
+            </div>
+
+            <!-- FORMAT BAR -->
+            <div class="format-bar" id="formatBar">
+              <span class="format-label">Format:</span>
+              <button class="fmt-btn active" id="fmt-decimal" data-format="decimal">Decimal</button>
+              <button class="fmt-btn" id="fmt-fraction" data-format="fraction">Fraction</button>
+              <button class="fmt-btn" id="fmt-mixed" data-format="mixed">Mixed</button>
+              <button class="fmt-btn" id="fmt-exact" data-format="exact">Exact</button>
+              <div class="round-wrap" id="roundWrap">
+                <button class="fmt-btn" id="fmt-round" data-action="toggle-round">Round</button>
+                <div class="round-popover" id="roundPopover">
+                  <div class="round-popover-label">Decimal places</div>
+                  <div class="round-input-row">
+                    <input id="roundDpInput" class="round-dp-input" type="number" min="0" max="15" value="2">
+                    <button class="round-go-btn" id="roundGoBtn">OK</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ROW 1: SHIFT + NATURAL DISPLAY -->
+            <div class="btn-row row-sci">
+              <button class="key-shift fn" id="btnShift" data-action="shift" style="flex:1.1">
+                <span class="key-pri" style="font-size:12px;font-weight:800">SHIFT</span>
+              </button>
+              <button class="fn" id="sbtn-frac" data-action="frac">
+                <div class="nd-key"><div class="nd-frac"><span>a</span><div class="nd-frac-bar"></div><span>b</span></div></div>
+              </button>
+              <button class="fn" id="sbtn-sqrt" data-action="sqrt">
+                <svg class="nd-sqrt-svg" width="32" height="22" viewBox="0 0 32 22" fill="none">
+                  <polyline points="1,13 5,13 9,20 14,3 20,3" stroke="#1a2e22" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                  <line x1="20" y1="3" x2="31" y2="3" stroke="#1a2e22" stroke-width="1.6" stroke-linecap="round"/>
+                  <text x="22" y="15" font-family="DM Mono,monospace" font-size="9" fill="#8aab98">□</text>
+                </svg>
+              </button>
+              <button class="fn" id="sbtn-pow" data-action="pow">
+                <div class="nd-key"><div class="nd-pow-wrap"><span class="nd-pow-base-box">□</span><span class="nd-pow-exp-box">□</span></div></div>
+              </button>
+              <button class="fn" id="sbtn-sq" data-action="sq">
+                <div class="nd-key"><div class="nd-sq-wrap"><span class="nd-sq-base">□</span><span class="nd-sq-exp">2</span></div></div>
+              </button>
+              <button class="fn" id="sbtn-log" data-action="log">
+                <div class="nd-key" style="display:flex;align-items:flex-end;gap:1px;font-family:'DM Mono',monospace;font-weight:500;color:#1a2e22;line-height:1">
+                  <div style="display:flex;flex-direction:column;align-items:flex-start">
+                    <span style="font-size:16px;line-height:1">log</span>
+                    <span style="font-size:9px;border:1px solid var(--border);border-radius:2px;padding:0 2px;min-width:10px;text-align:center">□</span>
+                  </div>
+                  <span style="font-size:14px;border:1px solid var(--border);border-radius:2px;padding:0 3px;margin-bottom:1px">□</span>
+                </div>
+              </button>
+              <button class="fn" id="sbtn-ln" data-fn="ln">
+                <span class="key-pri" style="font-size:15px">ln</span>
+              </button>
+              <button class="fn" id="sbtn-sci" data-action="sci">
+                <div class="nd-key" style="display:flex;align-items:flex-end;gap:1px;font-family:'DM Mono',monospace;font-weight:500;color:#1a2e22;line-height:1;font-size:11px;">
+                  <span style="font-size:11px;">×10</span><span style="font-size:8px;margin-bottom:1px;">n</span>
+                </div>
+              </button>
+              <button class="fn" id="btnFnMenu" data-action="fn-menu" style="flex:1.2">
+                <span class="key-pri" style="font-size:13px">f(x)</span>
+              </button>
+            </div>
+
+            <!-- ROW 2: TRIG -->
+            <div class="btn-row row-trig">
+              <button class="fn" id="sbtn-sin" data-fn="sin"><span class="key-pri">sin</span></button>
+              <button class="fn" id="sbtn-cos" data-fn="cos"><span class="key-pri">cos</span></button>
+              <button class="fn" id="sbtn-tan" data-fn="tan"><span class="key-pri">tan</span></button>
+              <button class="fn" id="sbtn-pi"  data-fn="pi"><span class="key-pri">π</span></button>
+              <button class="fn" id="sbtn-e"   data-fn="e_const"><span class="key-pri">e</span></button>
+              <button class="fn" data-text="("><span class="key-pri">(</span></button>
+              <button class="fn" data-text=")"><span class="key-pri">)</span></button>
+            </div>
+
+            <!-- ROW 3: MISC + ARROWS -->
+            <div class="btn-row row-misc">
+              <button class="fn" id="sbtn-abs" data-fn="abs" style="flex:0.5"><span class="key-pri">|x|</span></button>
+              <button class="fn" data-action="sign" style="flex:0.5"><span class="key-pri">±</span></button>
+              <button class="fn" id="sbtn-dms" data-action="dms" style="flex:0.6"><span class="key-pri">°</span></button>
+              <div class="arrow-pad" style="flex:2.4">
+                <button class="arr-blank" aria-hidden="true"></button>
+                <button data-cursor="up">▲</button>
+                <button class="arr-blank" aria-hidden="true"></button>
+                <button data-cursor="left">◀</button>
+                <button data-cursor="down">▼</button>
+                <button data-cursor="right">▶</button>
+              </div>
+            </div>
+
+            <!-- NUMPAD -->
+            <div class="btn-row row-clear">
+              <button class="clear" data-action="ac"><span class="key-pri">AC</span></button>
+              <button class="clear" data-action="ce"><span class="key-pri">CE</span></button>
+              <button class="clear" data-action="backspace"><span class="key-pri">⌫</span></button>
+              <button class="op" data-text="%"><span class="key-pri">%</span></button>
+              <button class="op" data-action="div"><span class="key-pri">÷</span></button>
+            </div>
+            <div class="btn-row row-num">
+              <button class="num" data-num="7">7</button>
+              <button class="num" data-num="8">8</button>
+              <button class="num" data-num="9">9</button>
+              <button class="op" data-action="mul">×</button>
+            </div>
+            <div class="btn-row row-num">
+              <button class="num" data-num="4">4</button>
+              <button class="num" data-num="5">5</button>
+              <button class="num" data-num="6">6</button>
+              <button class="op" data-text="-">−</button>
+            </div>
+            <div class="btn-row row-num">
+              <button class="num" data-num="1">1</button>
+              <button class="num" data-num="2">2</button>
+              <button class="num" data-num="3">3</button>
+              <button class="op" data-text="+">+</button>
+            </div>
+            <div class="btn-row row-num">
+              <button class="num wide" data-num="0">0</button>
+              <button class="num" data-action="dot">.</button>
+              <button class="eq wide" data-action="calculate">=</button>
+            </div>
+
+          </div><!-- /calc-app -->
+
+          <!-- f(x)/g(x) OVERLAY -->
+          <div class="fn-menu-overlay" id="fnMenuOverlay">
+            <div class="fn-menu-card">
+              <div class="fn-menu-header">
+                <span class="fn-menu-title">Function Editor</span>
+                <button class="fn-menu-close" id="fnMenuClose">×</button>
+              </div>
+              <div class="fn-menu-body">
+                <div class="fn-menu-section">
+                  <div class="fn-menu-row" style="gap:6px">
+                    <button class="fn-menu-btn" id="fnDefFx" data-fn-action="def-f">Define f(x)</button>
+                    <button class="fn-menu-btn" id="fnDefGx" data-fn-action="def-g">Define g(x)</button>
+                    <button class="fn-menu-btn" id="fnEvalFx" data-fn-action="eval-f">f(□)</button>
+                    <button class="fn-menu-btn" id="fnEvalGx" data-fn-action="eval-g">g(□)</button>
+                    <button class="fn-menu-btn" id="fnEvalFG" data-fn-action="eval-fg">f(g(□))</button>
+                    <button class="fn-menu-btn" id="fnEvalGF" data-fn-action="eval-gf">g(f(□))</button>
+                  </div>
+                </div>
+
+                <div id="fnDefRow" style="display:none">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                    <span class="fn-input-label" id="fnDefLabel">f(x) =</span>
+                    <div id="fnDefDisplay" style="flex:1;min-height:38px;background:var(--num-bg);border:1.5px solid var(--green);border-radius:8px;padding:6px 10px;font-family:'DM Mono',monospace;font-size:16px;color:var(--text);display:flex;align-items:center;word-break:break-all;"></div>
+                    <button class="fn-menu-action" id="fnSaveBtn" style="width:auto;padding:8px 14px;flex-shrink:0">Save</button>
+                  </div>
+                  <div class="fn-pad">
+                    <div class="fn-pad-row">
+                      <button class="fn-pad-btn fn-pad-pron" data-fn-pad="x"><em>x</em></button>
+                      <button class="fn-pad-btn fn-pad-pron" data-fn-pad="y"><em>y</em></button>
+                      <button class="fn-pad-btn fn-pad-pron" data-fn-pad="n"><em>n</em></button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="sin(">sin</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="cos(">cos</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="tan(">tan</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="sqrt(">√</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="^"><em>x</em>ⁿ</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="^2"><em>x</em>²</button>
+                    </div>
+                    <div class="fn-pad-row">
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="(">(</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad=")">)</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="π">π</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="e">e</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="abs(">|x|</button>
+                      <button class="fn-pad-btn fn-pad-fn" data-fn-pad="ln(">ln</button>
+                      <button class="fn-pad-btn fn-pad-op" data-fn-pad="+">+</button>
+                      <button class="fn-pad-btn fn-pad-op" data-fn-pad="-">−</button>
+                      <button class="fn-pad-btn fn-pad-op" data-fn-pad="*">×</button>
+                      <button class="fn-pad-btn fn-pad-op" data-fn-pad="/">÷</button>
+                    </div>
+                    <div class="fn-pad-row">
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="0">0</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="1">1</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="2">2</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="3">3</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="4">4</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="5">5</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="6">6</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="7">7</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="8">8</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad="9">9</button>
+                      <button class="fn-pad-btn fn-pad-num" data-fn-pad=".">.</button>
+                      <button class="fn-pad-btn fn-pad-del" id="fnPadDel">⌫</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="fnEvalRow" style="display:none;flex-direction:column;gap:8px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="fn-input-label" id="fnEvalLabel">x =</span>
+                    <input id="fnEvalInput" style="flex:1;height:38px;background:var(--num-bg);border:1.5px solid var(--green);border-radius:8px;padding:6px 10px;font-family:'DM Mono',monospace;font-size:16px;color:var(--text);outline:none;" placeholder="type or use pad">
+                    <button class="fn-menu-action" id="fnEvalGoBtn" style="width:auto;padding:8px 14px;flex-shrink:0">Go</button>
+                  </div>
+                  <div class="fn-pad-row">
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="0">0</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="1">1</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="2">2</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="3">3</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="4">4</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="5">5</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="6">6</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="7">7</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="8">8</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval="9">9</button>
+                    <button class="fn-pad-btn fn-pad-op" data-fn-eval="-">−</button>
+                    <button class="fn-pad-btn fn-pad-num" data-fn-eval=".">.</button>
+                    <button class="fn-pad-btn fn-pad-del" id="fnEvalPadDel">⌫</button>
+                  </div>
+                  <div id="fnEvalResult" style="display:none;background:#f0f8f3;border:1.5px solid var(--green-mid);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:18px;color:#1a2e22;text-align:center;font-weight:600;"></div>
+                </div>
+
+                <div class="fn-menu-section" id="fnDefsDisplay" style="margin-top:10px">
+                  <div class="fn-menu-section-title">Current definitions</div>
+                  <div id="fnDefsText" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-mid)">None defined</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HISTORY -->
+          <aside class="history-panel" id="historyPanel">
+            <div class="history-header" id="historyToggle">
+              <span class="history-title">📋 History <span class="history-chevron">▼</span></span>
+              <button class="history-clear" id="historyClearBtn">Clear all</button>
+            </div>
+            <div class="history-body">
+              <div class="history-list" id="historyList">
+                <div class="history-empty" id="historyEmpty">No calculations yet.<br>Your history appears here.</div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+      <!-- ══ STATISTICS MODULE ══ -->
+      <section id="module-statistics" class="module">
+        <div class="stats-type-bar">
+          <button class="screen-mod-btn" data-module="calculator">
+            <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="8" height="3" rx="1" fill="currentColor" opacity=".6"/></svg>
+            Calculate
+          </button>
+          <button class="screen-mod-btn active" style="pointer-events:none;">
+            <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="4" width="3" height="9" rx="1" fill="currentColor" opacity=".75"/><rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor"/></svg>
+            Statistics
+          </button>
+          <div style="width:1px;height:20px;background:var(--border);margin:0 6px;flex-shrink:0"></div>
+          <span class="stats-type-label">Mode:</span>
+          <button class="stats-type-btn active" id="stb-1var" data-stats-mode="1var">1-Variable</button>
+          <button class="stats-type-btn" id="stb-2var" data-stats-mode="2var">2-Variable</button>
+        </div>
+
+        <div id="stats-1var-panel">
+          <div class="stats-layout">
+            <div>
+              <div class="card">
+                <div class="card-title">Data — x values</div>
+                <textarea class="data-input" id="statsInput1" placeholder="Enter numbers separated by commas or new lines&#10;e.g. 12, 15, 9, 22, 18"></textarea>
+                <button class="action-btn" id="calcStats1Btn" style="width:100%;margin-top:10px">Calculate</button>
+                <div style="margin-top:12px">
+                  <div class="card-title">Sorted</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-mid);word-break:break-all" id="statsSorted1">—</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-title">Results</div>
+                <div class="stat-result-grid">
+                  <div class="stat-chip"><div class="stat-chip-label">n (Count)</div><div class="stat-chip-val" id="s1-n">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">Σx (Sum)</div><div class="stat-chip-val" id="s1-sum">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">x̄ (Mean)</div><div class="stat-chip-val" id="s1-mean">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">Median</div><div class="stat-chip-val" id="s1-med">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">Mode</div><div class="stat-chip-val" id="s1-mode">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">Range</div><div class="stat-chip-val" id="s1-range">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">σx (Pop SD)</div><div class="stat-chip-val" id="s1-popsd">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">sx (Samp SD)</div><div class="stat-chip-val" id="s1-sampsd">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">Σx² (Sum Sq)</div><div class="stat-chip-val" id="s1-sumx2">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">Min / Max</div><div class="stat-chip-val" id="s1-minmax">—</div></div>
+                </div>
+              </div>
+              <div class="card"><div class="card-title">Distribution</div><canvas id="statsChart1" height="130"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="stats-2var-panel" style="display:none">
+          <div class="stats-layout">
+            <div>
+              <div class="card">
+                <div class="card-title">Data — x &amp; y pairs</div>
+                <div style="overflow-x:auto">
+                  <table class="twovar-table"><thead><tr><th>#</th><th>x</th><th>y</th></tr></thead><tbody id="twovarBody"></tbody></table>
+                </div>
+                <button class="twovar-add-row" id="twovarAddRowBtn">+ Add row</button>
+                <button class="action-btn" id="calcStats2Btn" style="width:100%">Calculate</button>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-title">Results</div>
+                <div class="stat-result-grid">
+                  <div class="stat-chip"><div class="stat-chip-label">n</div><div class="stat-chip-val" id="s2-n">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">x̄</div><div class="stat-chip-val" id="s2-meanx">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">ȳ</div><div class="stat-chip-val" id="s2-meany">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">σx</div><div class="stat-chip-val" id="s2-sdx">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">σy</div><div class="stat-chip-val" id="s2-sdy">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">r (Corr)</div><div class="stat-chip-val" id="s2-r">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">a (slope)</div><div class="stat-chip-val" id="s2-a">—</div></div>
+                  <div class="stat-chip"><div class="stat-chip-label">b (intercept)</div><div class="stat-chip-val" id="s2-b">—</div></div>
+                  <div class="stat-chip" style="grid-column:1/-1"><div class="stat-chip-label">Regression line</div><div class="stat-chip-val" id="s2-line" style="font-size:13px">—</div></div>
+                </div>
+              </div>
+              <div class="card"><div class="card-title">Scatter Plot</div><canvas id="statsChart2" height="140"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /device-content -->
+  </div><!-- /device -->
+</div><!-- /app-shell -->
+
+<!-- Sidebar toggle -->
+<button id="sidebarToggleBtn" title="Toggle History">
+  <span id="sidebarChevron">▶</span>
+</button>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

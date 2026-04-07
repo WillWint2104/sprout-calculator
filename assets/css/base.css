@@ -1,0 +1,35 @@
+/* ── CUSTOM PROPERTIES ── */
+:root {
+  --green: #2e7d52;
+  --green-light: #3d9966;
+  --green-pale: #e8f5ee;
+  --green-mid: #c3e6d3;
+  --green-dark: #1a5c38;
+  --bg: #e8efe9;
+  --card: #fff;
+  --text: #1a2e22;
+  --text-mid: #4a6657;
+  --text-light: #8aab98;
+  --border: #d4e8dc;
+  --off-white: #f4f8f5;
+  --red: #c0392b;
+  --num-bg: #f0f7f3;
+  --op-bg: #e2f2ea;
+  --fn-bg: #ddf0e7;
+  --key-h: 48px;
+  --r: 12px;
+  --rsm: 8px;
+  --rxs: 6px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+}
